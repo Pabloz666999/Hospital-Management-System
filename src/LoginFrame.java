@@ -3,9 +3,8 @@ import components.ModernButton;
 import components.ModernPasswordField;
 import components.ModernTextField;
 import components.RoundedBorder;
-
-import javax.swing.*;
 import java.awt.*;
+import javax.swing.*;
 
 public class LoginFrame extends JFrame {
     private ModernTextField usernameField;
