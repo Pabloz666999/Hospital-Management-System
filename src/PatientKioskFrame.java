@@ -15,7 +15,7 @@ public class PatientKioskFrame extends JFrame {
     private JPanel contentPanel;
     
     public PatientKioskFrame() {
-        setTitle("QSmart Hospital - Patient Registration");
+        setTitle("Ruang Sehat - Patient Registration");
         setSize(1000, 650);
         setResizable(false); 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

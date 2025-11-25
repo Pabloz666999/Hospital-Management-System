@@ -10,7 +10,7 @@ public class DisplayBoardFrame extends JFrame {
     private JLabel dateLabel;
 
     public DisplayBoardFrame() {
-        setTitle("QSmart Hospital - Display Board");
+        setTitle("Ruang Sehat - Display Board");
         setSize(1000, 650);
         setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -106,7 +106,7 @@ public class DisplayBoardFrame extends JFrame {
         textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
         textPanel.setOpaque(false);
 
-        JLabel title = new JLabel("QSmart Hospital");
+        JLabel title = new JLabel("Ruang Sehat");
         title.setFont(new Font("Segoe UI", Font.BOLD, 18));
         title.setForeground(Color.WHITE);
 

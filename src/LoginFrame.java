@@ -11,7 +11,7 @@ public class LoginFrame extends JFrame {
     private ModernPasswordField passwordField;
     
     public LoginFrame() {
-        setTitle("QSmart Hospital - Login");
+        setTitle("Ruang Sehat - Login");
         setSize(1000, 650);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -78,7 +78,7 @@ public class LoginFrame extends JFrame {
         iconLabel.setFont(new Font("Segoe UI", Font.PLAIN, 50));
         iconLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         
-        JLabel titleLabel = new JLabel("QSmart Hospital");
+        JLabel titleLabel = new JLabel("Ruang Sehat");
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
         titleLabel.setForeground(ColorPalette.PRIMARY);
         titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);

@@ -7,7 +7,7 @@ import java.awt.event.*;
 public class MainMenuFrame extends JFrame {
     
     public MainMenuFrame() {
-        setTitle("QSmart Hospital - Hospital Management System");
+        setTitle("Ruang Sehat - Hospital Management System");
         setSize(1000, 650); 
         setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -82,7 +82,7 @@ public class MainMenuFrame extends JFrame {
         emojiLogo.setForeground(Color.WHITE);
         logoIcon.add(emojiLogo);
         
-        JLabel titleLabel = new JLabel("QSmart Hospital");
+        JLabel titleLabel = new JLabel("Ruang Sehat");
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 28));
         titleLabel.setForeground(new Color(60, 50, 120));
         
