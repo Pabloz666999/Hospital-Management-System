@@ -156,16 +156,15 @@ public class MainMenuFrame extends JFrame {
             }
         };
         iconBg.setPreferredSize(new Dimension(70, 70)); 
-        iconBg.setMaximumSize(new Dimension(70, 70)); // Penting agar tidak stretch di BoxLayout
+        iconBg.setMaximumSize(new Dimension(70, 70)); 
         iconBg.setLayout(new GridBagLayout());
-        iconBg.setAlignmentX(Component.CENTER_ALIGNMENT); // Center di BoxLayout
+        iconBg.setAlignmentX(Component.CENTER_ALIGNMENT); 
         
         JLabel iconLabel = new JLabel(iconEmoji);
         iconLabel.setFont(new Font("Segoe UI", Font.PLAIN, 34));
         iconLabel.setForeground(Color.WHITE);
         iconBg.add(iconLabel);
         
-        // 2. Labels
         JLabel titleLabel = new JLabel(title);
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
         titleLabel.setForeground(new Color(80, 60, 160));

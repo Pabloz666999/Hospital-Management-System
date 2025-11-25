@@ -39,7 +39,6 @@ public class LoginFrame extends JFrame {
                 Graphics2D g2 = (Graphics2D) g;
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 
-                // Gradient background
                 GradientPaint gp = new GradientPaint(0, 0, ColorPalette.PRIMARY, getWidth(), getHeight(), ColorPalette.SECONDARY);
                 g2.setPaint(gp);
                 g2.fillRect(0, 0, getWidth(), getHeight());
@@ -52,7 +51,6 @@ public class LoginFrame extends JFrame {
                 g2.drawLine(250, 210, 250, 310);
                 g2.drawLine(200, 260, 300, 260);
                 
-                // Dekorasi lingkaran kecil
                 g2.setColor(new Color(255, 255, 255, 20));
                 g2.fillOval(50, 50, 100, 100);
                 g2.fillOval(350, 500, 150, 150);

@@ -1,7 +1,6 @@
 package components;
 
 import javax.swing.*;
-
 import java.awt.*;
 
 public class ModernPasswordField extends JPasswordField {
