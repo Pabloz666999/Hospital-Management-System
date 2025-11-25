@@ -8,13 +8,13 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.geom.RoundRectangle2D;
 
-public class PatientKioskFrame extends JFrame {
+public class PatientRegistration extends JFrame {
     private int currentStep = 1;
     private String selectedService = "";
     private JPanel mainPanel;
     private JPanel contentPanel;
     
-    public PatientKioskFrame() {
+    public PatientRegistration() {
         setTitle("Ruang Sehat - Patient Registration");
         setSize(1000, 650);
         setResizable(false); 
@@ -225,7 +225,7 @@ public class PatientKioskFrame extends JFrame {
         
         JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         titlePanel.setBackground(ColorPalette.BACKGROUND);
-        JLabel titleLabel = new JLabel("Select Service");
+        JLabel titleLabel = new JLabel("Pilih Poli");
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 22));
         titleLabel.setForeground(ColorPalette.PRIMARY);
         titlePanel.add(titleLabel);
@@ -236,9 +236,16 @@ public class PatientKioskFrame extends JFrame {
         servicesPanel.setBorder(BorderFactory.createEmptyBorder(0, 40, 40, 40)); 
         
         String[][] services = {
-            {"🏥", "General Medicine"}, {"🚑", "Emergency"}, {"❤️", "Cardiology"}, {"👶", "Pediatrics"},
-            {"🦴", "Orthopedics"}, {"🔬", "Laboratory"}, {"📷", "Radiology"}, {"💊", "Pharmacy"}
+            {"🏥", "Poli Umum"},
+            {"🚑", "IGD (Instalasi Gawat Darurat)"},
+            {"❤️", "Poli Jantung"},
+            {"👶", "Poli Anak"},
+            {"🦴", "Poli Ortopedi"},
+            {"🔬", "Laboratorium"},
+            {"📷", "Radiologi"},
+            {"💊", "Farmasi"}
         };
+
         for (String[] service : services) servicesPanel.add(createServiceCard(service[0], service[1]));
         
         JPanel centerPanel = new JPanel(new BorderLayout());
@@ -271,18 +278,18 @@ public class PatientKioskFrame extends JFrame {
         
         formCard.setPreferredSize(new Dimension(750, 480)); 
         
-        JLabel titleLabel = new JLabel("Patient Information");
+        JLabel titleLabel = new JLabel("Data Pasien");
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 22));
         titleLabel.setForeground(ColorPalette.PRIMARY);
         titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        JLabel serviceLabel = new JLabel("Service: " + selectedService);
+        JLabel serviceLabel = new JLabel("Poli: " + selectedService);
         serviceLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         serviceLabel.setForeground(ColorPalette.TEXT_SECONDARY);
         serviceLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         formCard.add(titleLabel); formCard.add(Box.createVerticalStrut(5));
         formCard.add(serviceLabel); formCard.add(Box.createVerticalStrut(20));
         
-        JLabel nameLabel = new JLabel("Full Name");
+        JLabel nameLabel = new JLabel("Nama Lengkap");
         nameLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
         nameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         ModernTextField nameField = new ModernTextField("");
@@ -300,7 +307,7 @@ public class PatientKioskFrame extends JFrame {
         phonePanel.setLayout(new BoxLayout(phonePanel, BoxLayout.Y_AXIS)); 
         phonePanel.setOpaque(false);
         
-        JLabel phoneLabel = new JLabel("Phone Number"); 
+        JLabel phoneLabel = new JLabel("Nomor Telepon"); 
         phoneLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
         phoneLabel.setAlignmentX(Component.LEFT_ALIGNMENT); 
         
@@ -316,7 +323,7 @@ public class PatientKioskFrame extends JFrame {
         agePanel.setLayout(new BoxLayout(agePanel, BoxLayout.Y_AXIS)); 
         agePanel.setOpaque(false);
         
-        JLabel ageLabel = new JLabel("Age"); 
+        JLabel ageLabel = new JLabel("Umur"); 
         ageLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
         ageLabel.setAlignmentX(Component.LEFT_ALIGNMENT); 
         
@@ -348,7 +355,7 @@ public class PatientKioskFrame extends JFrame {
         formCard.add(rowPanel); 
         formCard.add(Box.createVerticalStrut(15));
         
-        JLabel idLabel = new JLabel("National ID");
+        JLabel idLabel = new JLabel("Nomor Induk Kependudukan (NIK)");
         idLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
         idLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         ModernTextField idField = new ModernTextField("");
@@ -373,7 +380,7 @@ public class PatientKioskFrame extends JFrame {
         submitButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
         submitButton.addActionListener(e -> {
             if(nameField.getText().trim().isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Please enter patient name", "Validation Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Silakan masukkan nama pasien", "Validasi Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
             currentStep = 3;
@@ -433,7 +440,7 @@ public class PatientKioskFrame extends JFrame {
         headerContent.setLayout(new BoxLayout(headerContent, BoxLayout.Y_AXIS));
         headerContent.setOpaque(false);
         
-        JLabel confirmLabel = new JLabel("Confirmation");
+        JLabel confirmLabel = new JLabel("Konfirmasi");
         confirmLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
         confirmLabel.setForeground(Color.WHITE);
         confirmLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -446,7 +453,7 @@ public class PatientKioskFrame extends JFrame {
         bodyPanel.setBackground(Color.WHITE);
         bodyPanel.setBorder(BorderFactory.createEmptyBorder(5, 30, 25, 30));
         
-        JLabel queueLabel = new JLabel("Your Queue Number");
+        JLabel queueLabel = new JLabel("Nomor Antrian Anda");
         queueLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         queueLabel.setForeground(ColorPalette.TEXT_SECONDARY);
         queueLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -460,7 +467,7 @@ public class PatientKioskFrame extends JFrame {
         bodyPanel.add(queueLabel); bodyPanel.add(Box.createVerticalStrut(2));
         bodyPanel.add(numberLabel); bodyPanel.add(Box.createVerticalStrut(8));
         
-        JLabel waitLabel = new JLabel("Estimated Wait Time");
+        JLabel waitLabel = new JLabel("Perkiraan Waktu Tunggu");
         waitLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         waitLabel.setForeground(ColorPalette.TEXT_SECONDARY);
         waitLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -517,7 +524,7 @@ public class PatientKioskFrame extends JFrame {
         qrIconPanel.setBackground(Color.WHITE);
         qrContainer.add(qrIconPanel);
         
-        JLabel scanLabel = new JLabel("Scan QR at verification point");
+        JLabel scanLabel = new JLabel("Scan untuk informasi lebih lanjut");
         scanLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         scanLabel.setForeground(ColorPalette.TEXT_SECONDARY);
         scanLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -531,11 +538,11 @@ public class PatientKioskFrame extends JFrame {
         buttonPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
         buttonPanel.setOpaque(false);
         
-        ModernButton newRegButton = new ModernButton("New Registration", ColorPalette.PRIMARY, ColorPalette.PRIMARY_DARK);
+        ModernButton newRegButton = new ModernButton("Pendaftaran Baru", ColorPalette.PRIMARY, ColorPalette.PRIMARY_DARK);
         newRegButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
         newRegButton.addActionListener(e -> { currentStep = 1; showServiceSelection(); });
         
-        JButton printButton = new JButton("Print");
+        JButton printButton = new JButton("Cetak Tiket");
         printButton.setFont(new Font("Segoe UI", Font.BOLD, 14));
         printButton.setForeground(ColorPalette.PRIMARY);
         printButton.setBackground(Color.WHITE);
@@ -544,7 +551,7 @@ public class PatientKioskFrame extends JFrame {
         printButton.setFocusPainted(false);
         printButton.setContentAreaFilled(false);
         printButton.setOpaque(true);
-        printButton.addActionListener(e -> JOptionPane.showMessageDialog(this, "Printing queue ticket...", "Print", JOptionPane.INFORMATION_MESSAGE));
+        printButton.addActionListener(e -> JOptionPane.showMessageDialog(this, "Mencetak tiket antrian...", "Cetak", JOptionPane.INFORMATION_MESSAGE));
         
         buttonPanel.add(newRegButton); buttonPanel.add(printButton);
         bodyPanel.add(buttonPanel);

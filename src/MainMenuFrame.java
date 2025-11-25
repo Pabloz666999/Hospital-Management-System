@@ -30,20 +30,20 @@ public class MainMenuFrame extends JFrame {
         
         cardsPanel.add(createMenuCard(
             "📱", 
-            "Patient Kiosk", 
-            "Self-service registration & QR code generation"
+            "Patient Registration", 
+            "Pendaftaran layanan oleh petugas & pembuatan QR Code otomatis"
         ));
         
         cardsPanel.add(createMenuCard(
             "🖥️", 
             "Display Board", 
-            "Real-time queue status view for waiting room"
+            "Pemantauan status antrian secara real-time di ruang tunggu"
         ));
         
         cardsPanel.add(createMenuCard(
             "🎛️", 
             "Admin Dashboard", 
-            "Complete queue management and analytics"
+            "Sistem manajemen antrian yang komprehensif dengan fitur analitik"
         ));
         
         contentWrapper.add(headerPanel);
@@ -89,7 +89,7 @@ public class MainMenuFrame extends JFrame {
         titleRow.add(logoIcon);
         titleRow.add(titleLabel);
         
-        JLabel instructionLabel = new JLabel("Select a component to view");
+        JLabel instructionLabel = new JLabel("Silakan pilih fitur yang ingin Anda lihat");
         instructionLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         instructionLabel.setForeground(Color.GRAY);
         instructionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -188,9 +188,9 @@ public class MainMenuFrame extends JFrame {
         card.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (title.equals("Patient Kiosk")) {
+                if (title.equals("Patient Registration")) {
                     dispose();
-                    new PatientKioskFrame(); 
+                    new PatientRegistration(); 
                 } else if (title.equals("Display Board")) {
                     dispose();
                     new DisplayBoardFrame(); 
