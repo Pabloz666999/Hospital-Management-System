@@ -29,20 +29,20 @@ public class MainMenuFrame extends JFrame {
         cardsPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10)); 
         
         cardsPanel.add(createMenuCard(
-            "📱", 
-            "Patient Registration", 
+            "📝", 
+            "Registrasi Pasien", 
             "Pendaftaran layanan oleh petugas & pembuatan QR Code otomatis"
         ));
         
         cardsPanel.add(createMenuCard(
             "🖥️", 
-            "Display Board", 
+            "Layar Antrian", 
             "Pemantauan status antrian secara real-time di ruang tunggu"
         ));
         
         cardsPanel.add(createMenuCard(
-            "🎛️", 
-            "Admin Dashboard", 
+            "📊", 
+            "Dashboard Admin", 
             "Sistem manajemen antrian yang komprehensif dengan fitur analitik"
         ));
         
@@ -188,16 +188,15 @@ public class MainMenuFrame extends JFrame {
         card.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (title.equals("Patient Registration")) {
+                if (title.equals("Registrasi Pasien")) {
                     dispose();
                     new PatientRegistration(); 
-                } else if (title.equals("Display Board")) {
+                } else if (title.equals("Layar Antrian")) {
                     dispose();
                     new DisplayBoardFrame(); 
-                } else {
-                    JOptionPane.showMessageDialog(MainMenuFrame.this, 
-                        "Opening " + title + "...\n(Feature will be implemented)", 
-                        title, JOptionPane.INFORMATION_MESSAGE);
+                } else if (title.equals("Dashboard Admin")) { 
+                    dispose();
+                    new AdminDashboardFrame(); 
                 }
             }
         });

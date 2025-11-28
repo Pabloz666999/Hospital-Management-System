@@ -8,7 +8,7 @@ public class Main {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            new LoginFrame();
+            new MainMenuFrame();
         });
     }
 }

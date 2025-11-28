@@ -1,6 +1,5 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -9,8 +8,12 @@ public class DisplayBoardFrame extends JFrame {
     private JLabel timeLabel;
     private JLabel dateLabel;
 
+    private static final String TICKET_CALLED = "A045";
+    private static final String UNIT_DESTINATION = "Poli Umum";
+    private static final String COUNTER_NUMBER = "3";
+
     public DisplayBoardFrame() {
-        setTitle("Ruang Sehat - Display Board");
+        setTitle("Ruang Sehat - Layar Antrian");
         setSize(1000, 650);
         setResizable(false);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -35,21 +38,31 @@ public class DisplayBoardFrame extends JFrame {
         contentPanel.setOpaque(false);
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(10, 30, 30, 15);
         gbc.fill = GridBagConstraints.BOTH;
 
         gbc.gridx = 0;
         gbc.gridy = 0;
-        gbc.weightx = 0.65;
-        gbc.weighty = 1.0;
+        gbc.weightx = 0.7;
+        gbc.weighty = 0.75;
+        gbc.anchor = GridBagConstraints.NORTH;
+        gbc.insets = new Insets(0, 30, 10, 10);
         contentPanel.add(createLeftSection(), gbc);
 
         gbc.gridx = 1;
         gbc.gridy = 0;
-        gbc.weightx = 0.35;
-        gbc.weighty = 1.0;
-        gbc.insets = new Insets(10, 15, 30, 30);
+        gbc.weightx = 0.3;
+        gbc.weighty = 0.75;
+        gbc.anchor = GridBagConstraints.NORTH;
+        gbc.insets = new Insets(0, 10, 10, 30);
         contentPanel.add(createRightSection(), gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.gridwidth = 2;
+        gbc.weightx = 1.0;
+        gbc.weighty = 0.25;
+        gbc.insets = new Insets(5, 50, 20, 50);
+        contentPanel.add(createBottomSection(), gbc);
 
         mainPanel.add(contentPanel, BorderLayout.CENTER);
 
@@ -62,7 +75,7 @@ public class DisplayBoardFrame extends JFrame {
     private JPanel createHeader() {
         JPanel header = new JPanel(new BorderLayout());
         header.setOpaque(false);
-        header.setBorder(BorderFactory.createEmptyBorder(20, 30, 10, 30));
+        header.setBorder(BorderFactory.createEmptyBorder(15, 30, 10, 30));
 
         JPanel leftContainer = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
         leftContainer.setOpaque(false);
@@ -74,6 +87,7 @@ public class DisplayBoardFrame extends JFrame {
         backButton.setBorderPainted(false);
         backButton.setFocusPainted(false);
         backButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
         backButton.addActionListener(e -> {
             dispose();
             new MainMenuFrame();
@@ -81,9 +95,6 @@ public class DisplayBoardFrame extends JFrame {
 
         JLabel logoIcon = new JLabel("🏥");
         logoIcon.setFont(new Font("Segoe UI", Font.PLAIN, 32));
-        JPanel logoBg = new JPanel(new GridBagLayout());
-        logoBg.setPreferredSize(new Dimension(50, 50));
-        logoBg.add(logoIcon);
 
         JPanel textPanel = new JPanel();
         textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
@@ -101,14 +112,14 @@ public class DisplayBoardFrame extends JFrame {
         textPanel.add(subtitle);
 
         leftContainer.add(backButton);
-        leftContainer.add(logoBg);
+        leftContainer.add(logoIcon);
         leftContainer.add(textPanel);
 
         JPanel timePanel = new JPanel();
         timePanel.setLayout(new BoxLayout(timePanel, BoxLayout.Y_AXIS));
         timePanel.setOpaque(false);
 
-        dateLabel = new JLabel("Sedang memuat tanggal...");
+        dateLabel = new JLabel("Sedang memuat...");
         dateLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         dateLabel.setForeground(new Color(220, 220, 220));
         dateLabel.setAlignmentX(Component.RIGHT_ALIGNMENT);
@@ -138,15 +149,16 @@ public class DisplayBoardFrame extends JFrame {
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 30, 30);
             }
         };
-        mainCard.setLayout(new GridBagLayout());
+        mainCard.setLayout(new BorderLayout());
         mainCard.setOpaque(false);
 
         JPanel contentWrapper = new JPanel();
         contentWrapper.setLayout(new BoxLayout(contentWrapper, BoxLayout.Y_AXIS));
         contentWrapper.setOpaque(false);
+        contentWrapper.setBorder(BorderFactory.createEmptyBorder(15, 0, 15, 0));
 
-        JLabel servingLabel = new JLabel("Sedang Dilayani");
-        servingLabel.setFont(new Font("Segoe UI", Font.PLAIN, 20));
+        JLabel servingLabel = new JLabel("Nomor Antrian Dipanggil");
+        servingLabel.setFont(new Font("Segoe UI", Font.PLAIN, 18));
         servingLabel.setForeground(Color.GRAY);
         servingLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
@@ -162,17 +174,30 @@ public class DisplayBoardFrame extends JFrame {
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 30, 30);
             }
         };
-        numberBox.setPreferredSize(new Dimension(400, 200));
-        numberBox.setMaximumSize(new Dimension(400, 200));
-        numberBox.setLayout(new GridBagLayout());
+        numberBox.setMaximumSize(new Dimension(500, 220));
+        numberBox.setLayout(new BoxLayout(numberBox, BoxLayout.Y_AXIS));
+        numberBox.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
 
-        JLabel numberLabel = new JLabel("A045");
-        numberLabel.setFont(new Font("Segoe UI", Font.BOLD, 100));
+        JLabel numberLabel = new JLabel(TICKET_CALLED);
+        numberLabel.setFont(new Font("Segoe UI", Font.BOLD, 90));
         numberLabel.setForeground(Color.WHITE);
-        numberBox.add(numberLabel);
+        numberLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JLabel counterLabel = new JLabel("Counter");
-        counterLabel.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        JLabel unitLabel = new JLabel(UNIT_DESTINATION);
+        unitLabel.setFont(new Font("Segoe UI", Font.PLAIN, 24));
+        unitLabel.setForeground(new Color(220, 220, 255));
+        unitLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        numberBox.add(numberLabel);
+        numberBox.add(Box.createVerticalStrut(5));
+        numberBox.add(unitLabel);
+
+        JPanel counterPanel = new JPanel();
+        counterPanel.setLayout(new BoxLayout(counterPanel, BoxLayout.Y_AXIS));
+        counterPanel.setOpaque(false);
+
+        JLabel counterLabel = new JLabel("Silakan Menuju Loket");
+        counterLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         counterLabel.setForeground(Color.GRAY);
         counterLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
@@ -185,23 +210,31 @@ public class DisplayBoardFrame extends JFrame {
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20);
             }
         };
-        counterBox.setPreferredSize(new Dimension(120, 70));
-        counterBox.setMaximumSize(new Dimension(120, 70));
+        counterBox.setPreferredSize(new Dimension(140, 50));
+        counterBox.setMaximumSize(new Dimension(140, 50));
         counterBox.setLayout(new GridBagLayout());
-        JLabel counterNum = new JLabel("3");
-        counterNum.setFont(new Font("Segoe UI", Font.BOLD, 36));
+
+        JLabel counterNum = new JLabel("LOKET " + COUNTER_NUMBER);
+        counterNum.setFont(new Font("Segoe UI", Font.BOLD, 24));
         counterNum.setForeground(Color.WHITE);
         counterBox.add(counterNum);
 
-        contentWrapper.add(servingLabel);
-        contentWrapper.add(Box.createVerticalStrut(15));
-        contentWrapper.add(numberBox);
-        contentWrapper.add(Box.createVerticalStrut(25));
-        contentWrapper.add(counterLabel);
-        contentWrapper.add(Box.createVerticalStrut(5));
-        contentWrapper.add(counterBox);
+        counterPanel.add(counterLabel);
+        counterPanel.add(Box.createVerticalStrut(5));
+        counterPanel.add(counterBox);
+        counterPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        mainCard.add(contentWrapper);
+        contentWrapper.add(servingLabel);
+        contentWrapper.add(Box.createVerticalStrut(10));
+        contentWrapper.add(numberBox);
+        contentWrapper.add(Box.createVerticalStrut(20));
+        contentWrapper.add(counterPanel);
+
+        JPanel centerWrapper = new JPanel(new GridBagLayout());
+        centerWrapper.setOpaque(false);
+        centerWrapper.add(contentWrapper);
+
+        mainCard.add(centerWrapper, BorderLayout.CENTER);
 
         return mainCard;
     }
@@ -211,16 +244,18 @@ public class DisplayBoardFrame extends JFrame {
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
         panel.setOpaque(false);
 
-        // ==== TITLE ====
         JPanel titlePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         titlePanel.setOpaque(false);
 
+        titlePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        titlePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+
         JLabel icon = new JLabel("🕒 ");
         icon.setForeground(Color.WHITE);
-        icon.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        icon.setFont(new Font("Segoe UI", Font.PLAIN, 14));
 
         JLabel label = new JLabel("Daftar Antrian");
-        label.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        label.setFont(new Font("Segoe UI", Font.BOLD, 14));
         label.setForeground(Color.WHITE);
 
         titlePanel.add(icon);
@@ -230,35 +265,102 @@ public class DisplayBoardFrame extends JFrame {
         listContainer.setLayout(new BoxLayout(listContainer, BoxLayout.Y_AXIS));
         listContainer.setOpaque(false);
 
-        listContainer.add(Box.createVerticalStrut(0));
+        listContainer.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        listContainer.add(Box.createVerticalStrut(5));
 
         listContainer.add(createQueueItem("1", "A046", "Poli Umum"));
-        listContainer.add(Box.createVerticalStrut(20));
+        listContainer.add(Box.createVerticalStrut(10));
 
         listContainer.add(createQueueItem("2", "B023", "Kardiologi"));
-        listContainer.add(Box.createVerticalStrut(20));
+        listContainer.add(Box.createVerticalStrut(10));
 
         listContainer.add(createQueueItem("3", "C012", "Laboratorium"));
-        listContainer.add(Box.createVerticalStrut(20));
+        listContainer.add(Box.createVerticalStrut(10));
 
         listContainer.add(createQueueItem("4", "A047", "Poli Anak"));
-        listContainer.add(Box.createVerticalStrut(20));
+        listContainer.add(Box.createVerticalStrut(10));
 
         listContainer.add(createQueueItem("5", "D008", "Radiologi"));
 
         panel.add(titlePanel);
-
-        panel.add(Box.createVerticalStrut(0));
-
+        panel.add(Box.createVerticalStrut(5));
         panel.add(listContainer);
+
         panel.add(Box.createVerticalGlue());
 
         return panel;
     }
 
+    private JPanel createBottomSection() {
+        JPanel bottomPanel = new JPanel();
+        bottomPanel.setLayout(new BoxLayout(bottomPanel, BoxLayout.Y_AXIS));
+        bottomPanel.setOpaque(false);
+
+        JLabel titleLabel = new JLabel("Loket Sedang Melayani");
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        titleLabel.setForeground(Color.WHITE);
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JPanel counterListPanel = new JPanel(new GridLayout(1, 5, 15, 0));
+        counterListPanel.setOpaque(false);
+
+        counterListPanel.add(createCounterBox("1", "A044"));
+        counterListPanel.add(createCounterBox("2", "B022"));
+        counterListPanel.add(createCounterBox("3", TICKET_CALLED));
+        counterListPanel.add(createCounterBox("4", "A046"));
+        counterListPanel.add(createCounterBox("5", "D007"));
+
+        counterListPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        bottomPanel.add(titleLabel);
+        bottomPanel.add(counterListPanel);
+        bottomPanel.add(Box.createVerticalGlue());
+
+        return bottomPanel;
+    }
+
+    private JPanel createCounterBox(String counterNum, String ticketNum) {
+        JPanel counterBox = new JPanel(new GridBagLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g;
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(new Color(90, 70, 160));
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15);
+            }
+        };
+        counterBox.setOpaque(false);
+        counterBox.setPreferredSize(new Dimension(80, 100));
+        counterBox.setBorder(BorderFactory.createEmptyBorder(10, 5, 10, 5));
+
+        JPanel content = new JPanel();
+        content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
+        content.setOpaque(false);
+
+        JLabel counterLbl = new JLabel("LOKET " + counterNum);
+        counterLbl.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        counterLbl.setForeground(new Color(180, 180, 255));
+        counterLbl.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JLabel ticketLbl = new JLabel(ticketNum);
+        ticketLbl.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        ticketLbl.setForeground(Color.WHITE);
+        ticketLbl.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        content.add(counterLbl);
+        content.add(Box.createVerticalStrut(5));
+        content.add(ticketLbl);
+
+        counterBox.add(content);
+
+        return counterBox;
+    }
 
     private JPanel createQueueItem(String index, String ticket, String dept) {
-        JPanel item = new JPanel(new BorderLayout(15, 0)) {
+        JPanel item = new JPanel(new BorderLayout(10, 0)) {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
@@ -269,13 +371,12 @@ public class DisplayBoardFrame extends JFrame {
             }
         };
         item.setOpaque(false);
-        item.setPreferredSize(new Dimension(300, 70));
-        item.setMaximumSize(new Dimension(1000, 70));
-        item.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 15));
+        item.setMaximumSize(new Dimension(1000, 60));
+        item.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 10));
 
         JPanel circleWrapper = new JPanel(new GridBagLayout());
         circleWrapper.setOpaque(false);
-        circleWrapper.setPreferredSize(new Dimension(50, 70));
+        circleWrapper.setPreferredSize(new Dimension(40, 60));
 
         JPanel circle = new JPanel() {
             @Override
@@ -283,24 +384,18 @@ public class DisplayBoardFrame extends JFrame {
                 super.paintComponent(g);
                 Graphics2D g2 = (Graphics2D) g;
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
                 g2.setColor(new Color(150, 130, 255));
-                g2.fillOval(0, 0, 40, 40);
-
+                g2.fillOval(0, 0, 30, 30);
                 g2.setColor(Color.WHITE);
-                g2.setFont(new Font("Segoe UI", Font.BOLD, 16));
+                g2.setFont(new Font("Segoe UI", Font.BOLD, 14));
                 FontMetrics fm = g2.getFontMetrics();
                 int stringWidth = fm.stringWidth(index);
                 int stringAscent = fm.getAscent();
-
-                g2.drawString(index, (40 - stringWidth) / 2, (40 + stringAscent) / 2 - 2);
+                g2.drawString(index, (30 - stringWidth) / 2, (30 + stringAscent) / 2 - 2);
             }
         };
-        circle.setPreferredSize(new Dimension(41, 41));
-        circle.setMinimumSize(new Dimension(41, 41));
-        circle.setMaximumSize(new Dimension(41, 41));
+        circle.setPreferredSize(new Dimension(31, 31));
         circle.setOpaque(false);
-
         circleWrapper.add(circle);
 
         JPanel textPanel = new JPanel(new GridBagLayout());
@@ -311,11 +406,11 @@ public class DisplayBoardFrame extends JFrame {
         gbc.anchor = GridBagConstraints.WEST;
 
         JLabel ticketLbl = new JLabel(ticket);
-        ticketLbl.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        ticketLbl.setFont(new Font("Segoe UI", Font.BOLD, 16));
         ticketLbl.setForeground(Color.WHITE);
 
         JLabel deptLbl = new JLabel(dept);
-        deptLbl.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        deptLbl.setFont(new Font("Segoe UI", Font.PLAIN, 11));
         deptLbl.setForeground(new Color(220, 220, 255));
 
         gbc.gridy = 0;
@@ -330,12 +425,7 @@ public class DisplayBoardFrame extends JFrame {
     }
 
     private void startClockThread() {
-        Timer timer = new Timer(1000, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                updateTime();
-            }
-        });
+        Timer timer = new Timer(1000, e -> updateTime());
         timer.start();
     }
 
@@ -343,10 +433,13 @@ public class DisplayBoardFrame extends JFrame {
         SimpleDateFormat timeFormat = new SimpleDateFormat("hh:mm a");
         SimpleDateFormat dateFormat = new SimpleDateFormat("EEEE, MMMM dd, yyyy");
         Date now = new Date();
-
         if (timeLabel != null)
             timeLabel.setText(timeFormat.format(now));
         if (dateLabel != null)
             dateLabel.setText(dateFormat.format(now));
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new DisplayBoardFrame());
     }
 }
