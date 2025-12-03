@@ -2,7 +2,6 @@ package model;
 
 import java.awt.Color;
 
-// Kelas Abstrak: Dasar untuk semua jenis layanan
 public abstract class HospitalService {
     private String name;
     private String description;

@@ -1,33 +1,22 @@
 package model;
 
-public class Patient extends User {
-    private String username; 
-    private String password;
+public class Patient {
+    private int id;
+    private String name;
     private String phoneNumber;
     private String identificationNumber;
-    
-    public Patient(int id, String name, String username, String password, String phoneNumber, String identificationNumber) {
-        super(id, name);
-        this.username = username;
-        this.password = password;
+    private Polyclinic targetPolyclinic;
+
+    public Patient(int id, String name, String phoneNumber,
+                   String identificationNumber, Polyclinic targetPolyclinic) {
+        this.id = id;
+        this.name = name;
         this.phoneNumber = phoneNumber;
         this.identificationNumber = identificationNumber;
+        this.targetPolyclinic = targetPolyclinic;
     }
 
-    public String getUsername() {
-        return username;
-    }
-    
-    // Metode untuk otentikasi
-    public boolean authenticate(String inputPassword) {
-        return this.password.equals(inputPassword);
-    }
-    
-    public String getPhoneNumber() { return phoneNumber; }
-    public String getIdentificationNumber() { return identificationNumber; }
-
-    @Override
-    public String getRoleDescription() {
-        return "Pasien Aktif";
+    public Polyclinic getTargetPolyclinic() {
+        return targetPolyclinic;
     }
 }
