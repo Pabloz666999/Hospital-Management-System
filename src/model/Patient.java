@@ -15,8 +15,21 @@ public class Patient {
         this.identificationNumber = identificationNumber;
         this.targetPolyclinic = targetPolyclinic;
     }
+    public int getId() {
+        return id;
+    }
+    public String getName() {
+        return name;
+    }
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+    public String getidentificationNumber() {
+        return identificationNumber;
+    }
 
     public Polyclinic getTargetPolyclinic() {
         return targetPolyclinic;
     }
 }
+
