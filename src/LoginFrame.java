@@ -4,17 +4,21 @@ import components.ModernPasswordField;
 import components.ModernTextField;
 import components.RoundedBorder;
 
+import db.AdminDao;
+import model.Admin;
+
 import java.awt.*;
 import javax.swing.*;
 
 public class LoginFrame extends JFrame {
     private ModernTextField usernameField;
     private ModernPasswordField passwordField;
+    private final AdminDao adminDao = new AdminDao();
 
     public LoginFrame() {
         setTitle("Ruang Sehat - Login");
         setSize(1000, 650);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
         setResizable(false);
 
@@ -152,14 +156,25 @@ public class LoginFrame extends JFrame {
         String username = usernameField.getText();
         String password = new String(passwordField.getPassword());
 
-        if (username.equals("admin") && password.equals("admin123")) {
-            dispose();
-            new MainMenuFrame();
-        } else {
+        if (username.trim().isEmpty() || password.isEmpty()) {
             JOptionPane.showMessageDialog(this,
-                    "Invalid username or password!",
-                    "Login Failed",
-                    JOptionPane.ERROR_MESSAGE);
+                    "Silakan isi username dan password.",
+                    "Validasi Login",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
         }
+
+        Admin admin = adminDao.findByCredentials(username.trim(), password);
+        if (admin == null) {
+            JOptionPane.showMessageDialog(this,
+                    "Username atau password salah.",
+                    "Login Gagal",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        SessionManager.setAdminLoggedIn(admin);
+        dispose();
+        new MainMenuFrame();
     }
 }

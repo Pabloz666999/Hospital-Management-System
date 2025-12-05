@@ -37,4 +37,3 @@ public class CounterHighlightScheduler {
         void onCounterChanged(int activeIndex);
     }
 }
-

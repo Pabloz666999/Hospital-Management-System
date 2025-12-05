@@ -1,5 +1,6 @@
 import db.QueueDao;
 import db.AdminDao;
+import model.Admin;
 import scheduler.CounterHighlightScheduler;
 import scheduler.QueueRefreshScheduler;
 import components.ColorPalette;
@@ -44,6 +45,8 @@ public class DisplayBoardFrame extends JFrame {
     private JPanel mainPanel;
     private JPanel loginPanel;
     private JPanel mainMenuPanel;
+    private PatientRegistration registrationPanel;
+    private AdminDashboardFrame adminDashboardPanel;
 
     private ModernTextField loginUsernameField;
     private ModernPasswordField loginPasswordField;
@@ -115,10 +118,14 @@ public class DisplayBoardFrame extends JFrame {
 
         loginPanel = createLoginPanel();
         mainMenuPanel = createMainMenuPanel();
+        registrationPanel = new PatientRegistration(this::showMainMenuPage);
+        adminDashboardPanel = new AdminDashboardFrame(this::showMainMenuPage);
 
         rootPanel.add(mainPanel, "DISPLAY");
         rootPanel.add(loginPanel, "LOGIN");
         rootPanel.add(mainMenuPanel, "MENU");
+        rootPanel.add(registrationPanel, "REGISTRATION");
+        rootPanel.add(adminDashboardPanel, "DASHBOARD");
 
         startClockThread();
         startDataRefresh();
@@ -360,7 +367,7 @@ public class DisplayBoardFrame extends JFrame {
                 "📱",
                 "Registrasi Pasien",
                 "Pendaftaran layanan oleh petugas & pembuatan QR Code otomatis",
-                this::showDisplayPage // sementara kembali ke layar antrian
+                this::showRegistrationPage
         ));
 
         cardsPanel.add(createMainMenuCard(
@@ -528,7 +535,13 @@ public class DisplayBoardFrame extends JFrame {
         card.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (onClick != null) {
+                if ("Dashboard Admin".equals(title)) {
+                    showDashboardPage();
+                } else if ("Registrasi Pasien".equals(title)) {
+                    showRegistrationPage();
+                } else if ("Layar Antrian".equals(title)) {
+                    showDisplayPage();
+                } else if (onClick != null) {
                     onClick.run();
                 }
             }
@@ -560,6 +573,18 @@ public class DisplayBoardFrame extends JFrame {
         }
     }
 
+    private void showRegistrationPage() {
+        if (rootLayout != null && rootPanel != null) {
+            rootLayout.show(rootPanel, "REGISTRATION");
+        }
+    }
+
+    private void showDashboardPage() {
+        if (rootLayout != null && rootPanel != null) {
+            rootLayout.show(rootPanel, "DASHBOARD");
+        }
+    }
+
     private void handleInlineLogin() {
         if (loginUsernameField == null || loginPasswordField == null) {
             return;
@@ -575,8 +600,8 @@ public class DisplayBoardFrame extends JFrame {
             return;
         }
 
-        boolean ok = adminDao.authenticate(username.trim(), password);
-        if (!ok) {
+        Admin admin = adminDao.findByCredentials(username.trim(), password);
+        if (admin == null) {
             JOptionPane.showMessageDialog(this,
                     "Username atau password salah.",
                     "Login Gagal",
@@ -584,7 +609,7 @@ public class DisplayBoardFrame extends JFrame {
             return;
         }
 
-        SessionManager.setAdminLoggedIn(username.trim());
+        SessionManager.setAdminLoggedIn(admin);
         showMainMenuPage();
     }
 

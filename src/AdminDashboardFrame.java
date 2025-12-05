@@ -1,13 +1,10 @@
 import components.ColorPalette;
-
-import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartPanel;
-import org.jfree.chart.JFreeChart;
-import org.jfree.chart.plot.CategoryPlot;
-import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.renderer.category.BarRenderer;
-import org.jfree.chart.renderer.category.StandardBarPainter;
-import org.jfree.data.category.DefaultCategoryDataset;
+import components.ModernButton;
+import components.RoundedBorder;
+import db.DashboardStatsDao;
+import db.LoketDao;
+import db.QueueDao;
+import scheduler.QueueRefreshScheduler;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -17,18 +14,43 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-public class AdminDashboardFrame extends JFrame {
+public class AdminDashboardFrame extends JPanel {
 
     private CardLayout cardLayout;
     private JPanel cardPanel;
     private JButton btnAnalytics, btnQueue;
 
+    private JPanel analyticsCard;
+    private JPanel queueCard;
+    private String currentCardName = "ANALYTICS";
+
+    private JTable queueTable;
+    private QueueRefreshScheduler refreshScheduler;
+    private JComboBox<LoketItem> loketCombo;
+
+    // Label nilai pada kartu statistik
+    private JLabel lblTotalPatients;
+    private JLabel lblAvgWait;
+    private JLabel lblActiveCounters;
+    private JLabel lblValidQueues;
+
+    // Callback ketika tombol back di header ditekan
+    private final Runnable onBack;
+
     public AdminDashboardFrame() {
-        setTitle("Ruang Sehat - Dashboard Admin");
-        setSize(1000, 650);
-        setResizable(false);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);
+        this(null);
+    }
+
+    public AdminDashboardFrame(Runnable onBack) {
+        this.onBack = onBack;
+        setLayout(new BorderLayout());
+        setBackground(ColorPalette.BACKGROUND);
+
+        // Inisialisasi label statistik dengan nilai default
+        lblTotalPatients = new JLabel("0");
+        lblAvgWait = new JLabel("0 mnt");
+        lblActiveCounters = new JLabel("0");
+        lblValidQueues = new JLabel("0");
 
         JPanel mainPanel = new JPanel(new BorderLayout());
         mainPanel.setBackground(ColorPalette.BACKGROUND);
@@ -49,21 +71,38 @@ public class AdminDashboardFrame extends JFrame {
         topContainer.add(createNavigationMenu()); // MENU NAVIGASI BARU
         topContainer.add(Box.createVerticalStrut(15));
 
-        contentPanel.add(topContainer, BorderLayout.NORTH);
-
         // --- TENGAH: Grafik / Tabel ---
         cardLayout = new CardLayout();
         cardPanel = new JPanel(cardLayout);
         cardPanel.setOpaque(false);
 
-        cardPanel.add(createAnalyticsCard(), "ANALYTICS");
-        cardPanel.add(createQueueManagementCard(), "QUEUE");
+        analyticsCard = createAnalyticsCard();
+        queueCard = createQueueManagementCard();
+        cardPanel.add(analyticsCard, "ANALYTICS");
+        cardPanel.add(queueCard, "QUEUE");
 
-        contentPanel.add(cardPanel, BorderLayout.CENTER);
+        JPanel centerContainer = new JPanel(new BorderLayout());
+        centerContainer.setOpaque(false);
+        centerContainer.add(topContainer, BorderLayout.NORTH);
+        centerContainer.add(cardPanel, BorderLayout.CENTER);
+
+        JScrollPane scrollPane = new JScrollPane(centerContainer);
+        scrollPane.setBorder(null);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        scrollPane.getViewport().setBackground(ColorPalette.BACKGROUND);
+
+        contentPanel.add(scrollPane, BorderLayout.CENTER);
 
         mainPanel.add(contentPanel, BorderLayout.CENTER);
 
-        add(mainPanel);
+        add(mainPanel, BorderLayout.CENTER);
+
+        // Ambil data awal untuk statistik
+        updateStatsValues();
+
+        refreshScheduler = new QueueRefreshScheduler(() -> SwingUtilities.invokeLater(this::reloadDashboardData));
+        refreshScheduler.start(5000, 5000);
+
         setVisible(true);
     }
 
@@ -98,6 +137,7 @@ public class AdminDashboardFrame extends JFrame {
 
     private void switchView(String cardName, JButton activeBtn, JButton inactiveBtn) {
         cardLayout.show(cardPanel, cardName);
+        currentCardName = cardName;
 
         activeBtn.setBackground(Color.WHITE);
         activeBtn.setForeground(Color.BLACK);
@@ -194,9 +234,13 @@ public class AdminDashboardFrame extends JFrame {
         backButton.setFocusPainted(false);
         backButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         backButton.addActionListener(e -> {
-            dispose();
-            new MainMenuFrame();
+            // Back button behavior lama (fallback)
+            SwingUtilities.getWindowAncestor(this).requestFocus();
         });
+        // Tambah callback ke container luar (mis. DisplayBoardFrame) supaya bisa kembali ke menu utama
+        if (onBack != null) {
+            backButton.addActionListener(e -> onBack.run());
+        }
 
         JLabel titleLabel = new JLabel("Ruang Sehat");
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
@@ -263,23 +307,25 @@ public class AdminDashboardFrame extends JFrame {
     private JPanel createStatsPanel() {
         JPanel statsPanel = new JPanel(new GridLayout(1, 4, 15, 0));
         statsPanel.setBackground(ColorPalette.BACKGROUND);
-        statsPanel.setPreferredSize(new Dimension(0, 100));
+        // Tinggikan area kartu supaya konten tidak menyentuh tepi bawah
+        statsPanel.setPreferredSize(new Dimension(0, 140));
 
-        statsPanel.add(createStatCard("Total Pasien", "143", "👥", new Color(130, 100, 255)));
-        statsPanel.add(createStatCard("Rerata Tunggu", "12 mnt", "🕒", new Color(80, 80, 100)));
-        statsPanel.add(createStatCard("Loket Aktif", "8", "🖥", new Color(75, 0, 130)));
-        statsPanel.add(createStatCard("Antrian Valid", "135", "✅", new Color(0, 200, 83)));
+        statsPanel.add(createStatCard("Total Pasien", lblTotalPatients, "👥", new Color(130, 100, 255)));
+        statsPanel.add(createStatCard("Rerata Tunggu", lblAvgWait, "🕒", new Color(80, 80, 100)));
+        statsPanel.add(createStatCard("Loket Aktif", lblActiveCounters, "🖥", new Color(75, 0, 130)));
+        statsPanel.add(createStatCard("Antrian Valid", lblValidQueues, "✅", new Color(0, 200, 83)));
 
         return statsPanel;
     }
 
-    private JPanel createStatCard(String title, String value, String icon, Color iconBgColor) {
+    private JPanel createStatCard(String title, JLabel valueLabel, String icon, Color iconBgColor) {
         ModernPanel card = new ModernPanel(new BorderLayout());
 
         JPanel content = new JPanel();
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
         content.setOpaque(false);
-        content.setBorder(BorderFactory.createEmptyBorder(15, 20, 15, 15));
+        // Tambah sedikit padding vertikal agar kartu terasa lebih tinggi dan seimbang
+        content.setBorder(BorderFactory.createEmptyBorder(18, 20, 18, 20));
 
         JPanel iconPanel = new JPanel() {
             @Override
@@ -291,14 +337,17 @@ public class AdminDashboardFrame extends JFrame {
                 super.paintComponent(g);
             }
         };
-        iconPanel.setPreferredSize(new Dimension(38, 38));
-        iconPanel.setMaximumSize(new Dimension(38, 38));
+        // Perbesar panel ikon dan buat benar‑benar 1:1 agar ikon berada di tengah kartu kecilnya
+        Dimension iconSize = new Dimension(48, 48);
+        iconPanel.setPreferredSize(iconSize);
+        iconPanel.setMinimumSize(iconSize);
+        iconPanel.setMaximumSize(iconSize);
         iconPanel.setOpaque(false);
         iconPanel.setLayout(new GridBagLayout());
         iconPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel iconLabel = new JLabel(icon);
-        iconLabel.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 18));
+        iconLabel.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 22));
         iconLabel.setForeground(Color.WHITE);
         iconPanel.add(iconLabel);
 
@@ -307,16 +356,19 @@ public class AdminDashboardFrame extends JFrame {
         titleLabel.setForeground(ColorPalette.TEXT_SECONDARY);
         titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel valueLabel = new JLabel(value);
+        // Label nilai diteruskan dari luar supaya bisa di‑update saat data berubah
         valueLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
         valueLabel.setForeground(ColorPalette.TEXT_PRIMARY);
         valueLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
+        // Gunakan glue di atas dan bawah supaya konten berada di tengah kartu
+        content.add(Box.createVerticalGlue());
         content.add(iconPanel);
         content.add(Box.createVerticalStrut(10));
         content.add(titleLabel);
         content.add(Box.createVerticalStrut(2));
         content.add(valueLabel);
+        content.add(Box.createVerticalGlue());
 
         card.add(content, BorderLayout.CENTER);
         return card;
@@ -331,7 +383,7 @@ public class AdminDashboardFrame extends JFrame {
 
         JLabel title = new JLabel("Statistik Departemen");
         title.setFont(new Font("Segoe UI", Font.BOLD, 15));
-        JLabel subtitle = new JLabel("Distribusi pasien per poli");
+        JLabel subtitle = new JLabel("Distribusi pasien per poli (hari ini)");
         subtitle.setFont(new Font("Segoe UI", Font.PLAIN, 11));
         subtitle.setForeground(ColorPalette.TEXT_SECONDARY);
 
@@ -341,44 +393,77 @@ public class AdminDashboardFrame extends JFrame {
         textContainer.add(subtitle);
         header.add(textContainer, BorderLayout.CENTER);
 
-        DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-        dataset.addValue(45, "Pasien", "Umum");
-        dataset.addValue(25, "Pasien", "IGD");
-        dataset.addValue(18, "Pasien", "Jantung");
-        dataset.addValue(32, "Pasien", "Anak");
-        dataset.addValue(28, "Pasien", "Ortopedi");
-        dataset.addValue(15, "Pasien", "Lab");
-        dataset.addValue(10, "Pasien", "Radiologi");
-        dataset.addValue(12, "Pasien", "Farmasi");
+        JPanel chartPlaceholder = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g;
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(Color.WHITE);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20);
+            }
+        };
+        chartPlaceholder.setOpaque(false);
+        chartPlaceholder.setLayout(new GridLayout(0, 1, 10, 5));
+        chartPlaceholder.setBorder(BorderFactory.createEmptyBorder(10, 25, 15, 25));
 
-        JFreeChart barChart = ChartFactory.createBarChart(
-                "", "", "", dataset,
-                PlotOrientation.VERTICAL, false, true, false);
+        QueueDao queueDao = new QueueDao();
+        java.util.List<QueueDao.PoliCount> counts = queueDao.loadPoliCountsToday();
 
-        barChart.setBackgroundPaint(Color.WHITE);
-        barChart.setBorderVisible(false);
-
-        CategoryPlot plot = barChart.getCategoryPlot();
-        plot.setBackgroundPaint(Color.WHITE);
-        plot.setOutlineVisible(false);
-        plot.setRangeGridlinePaint(new Color(240, 240, 245));
-        plot.setDomainGridlinesVisible(false);
-
-        BarRenderer renderer = (BarRenderer) plot.getRenderer();
-        renderer.setSeriesPaint(0, new Color(130, 100, 255));
-        renderer.setBarPainter(new StandardBarPainter());
-        renderer.setShadowVisible(false);
-        renderer.setMaximumBarWidth(0.10);
-
-        ChartPanel chartPanel = new ChartPanel(barChart);
-        chartPanel.setOpaque(false);
-        chartPanel.setBackground(Color.WHITE);
-        chartPanel.setBorder(BorderFactory.createEmptyBorder(0, 10, 10, 10));
+        if (counts.isEmpty()) {
+            JLabel empty = new JLabel("Belum ada data antrian hari ini.");
+            empty.setForeground(ColorPalette.TEXT_SECONDARY);
+            empty.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+            empty.setHorizontalAlignment(SwingConstants.CENTER);
+            chartPlaceholder.setLayout(new BorderLayout());
+            chartPlaceholder.add(empty, BorderLayout.CENTER);
+        } else {
+            int max = 1;
+            for (QueueDao.PoliCount pc : counts) {
+                if (pc.total > max) {
+                    max = pc.total;
+                }
+            }
+            Color[] colors = {
+                    new Color(130, 100, 255),
+                    new Color(244, 67, 54),
+                    new Color(76, 175, 80),
+                    new Color(255, 193, 7),
+                    new Color(0, 188, 212),
+                    new Color(103, 58, 183)
+            };
+            int i = 0;
+            for (QueueDao.PoliCount pc : counts) {
+                Color c = colors[i % colors.length];
+                chartPlaceholder.add(createBarRow(pc.poliName, pc.total, max, c));
+                i++;
+            }
+        }
 
         card.add(header, BorderLayout.NORTH);
-        card.add(chartPanel, BorderLayout.CENTER);
+        card.add(chartPlaceholder, BorderLayout.CENTER);
 
         return card;
+    }
+
+    private JPanel createBarRow(String label, int value, int max, Color barColor) {
+        JPanel row = new JPanel(new BorderLayout(10, 0));
+        row.setOpaque(false);
+
+        JLabel lbl = new JLabel(label);
+        lbl.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+
+        JProgressBar bar = new JProgressBar(0, max);
+        bar.setValue(value);
+        bar.setStringPainted(true);
+        bar.setString(value + " pasien");
+        bar.setForeground(barColor);
+        bar.setBackground(new Color(240, 240, 245));
+
+        row.add(lbl, BorderLayout.WEST);
+        row.add(bar, BorderLayout.CENTER);
+
+        return row;
     }
 
     private JPanel createQueueManagementCard() {
@@ -400,17 +485,70 @@ public class AdminDashboardFrame extends JFrame {
         textContainer.add(subtitle);
         header.add(textContainer, BorderLayout.CENTER);
 
+        JPanel controlPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        controlPanel.setOpaque(false);
+
+        JLabel loketLabel = new JLabel("Loket:");
+        loketLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+
+        LoketDao loketDao = new LoketDao();
+        java.util.List<LoketDao.Loket> lokets = loketDao.findAllActive();
+        loketCombo = new JComboBox<>();
+        for (LoketDao.Loket l : lokets) {
+            loketCombo.addItem(new LoketItem(l.getId(), l.getName()));
+        }
+        loketCombo.setFont(new Font("Segoe UI", Font.PLAIN, 12));
+        loketCombo.setPreferredSize(new Dimension(120, 32));
+        loketCombo.setMaximumSize(new Dimension(150, 32));
+        loketCombo.setBorder(BorderFactory.createCompoundBorder(
+                new RoundedBorder(ColorPalette.TEXT_SECONDARY, 1, 10),
+                BorderFactory.createEmptyBorder(2, 8, 2, 8)));
+
+        JButton btnCallNext = new ModernButton("Panggil Berikutnya",
+                ColorPalette.PRIMARY,
+                ColorPalette.PRIMARY_DARK);
+        JButton btnRecall = new ModernButton("Panggil Ulang",
+                ColorPalette.PRIMARY,
+                ColorPalette.PRIMARY_DARK);
+        JButton btnFinish = new ModernButton("Selesai",
+                ColorPalette.SUCCESS,
+                ColorPalette.SUCCESS.darker());
+        JButton btnCancel = new ModernButton("Batal",
+                ColorPalette.DANGER,
+                ColorPalette.DANGER.darker());
+
+        btnCallNext.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btnRecall.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btnFinish.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        btnCancel.setFont(new Font("Segoe UI", Font.BOLD, 12));
+
+        btnCallNext.addActionListener(e -> handleCallNext());
+        btnRecall.addActionListener(e -> handleRecall());
+        btnFinish.addActionListener(e -> handleFinish());
+        btnCancel.addActionListener(e -> handleCancel());
+
+        controlPanel.add(loketLabel);
+        controlPanel.add(loketCombo);
+        controlPanel.add(Box.createHorizontalStrut(10));
+        controlPanel.add(btnCallNext);
+        controlPanel.add(btnRecall);
+        controlPanel.add(btnFinish);
+        controlPanel.add(btnCancel);
+
         String[] columnNames = { "No. Antrian", "Nama Pasien", "Poli", "Waktu Tunggu", "Status" };
-        Object[][] data = {
-                { "A045", "Budi Santoso", "Poli Umum", "15 mnt", "Dipanggil" },
-                { "B023", "Siti Aminah", "Poli Jantung", "8 mnt", "Menunggu" },
-                { "C012", "Rudi Hartono", "Laboratorium", "22 mnt", "Menunggu" },
-                { "A047", "Dewi Lestari", "Poli Umum", "12 mnt", "Menunggu" },
-                { "D008", "Andi Wijaya", "Radiologi", "5 mnt", "Menunggu" },
-                { "E015", "Nina Karlina", "Poli Anak", "18 mnt", "Selesai" },
-                { "F003", "Joko Susilo", "Farmasi", "3 mnt", "Menunggu" },
-                { "G002", "Sari Indah", "IGD", "0 mnt", "Dipanggil" }
-        };
+
+        QueueDao queueDao = new QueueDao();
+        java.util.List<QueueDao.QueueItem> items = queueDao.loadRecentActivities(50);
+        Object[][] data = new Object[items.size()][5];
+        int i = 0;
+        for (QueueDao.QueueItem item : items) {
+            data[i][0] = item.nomorAntrian;
+            data[i][1] = item.patientName;
+            data[i][2] = item.poliName;
+            data[i][3] = formatWaitingTime(item);
+            data[i][4] = mapStatusLabel(item.status);
+            i++;
+        }
 
         DefaultTableModel model = new DefaultTableModel(data, columnNames) {
             @Override
@@ -420,6 +558,7 @@ public class AdminDashboardFrame extends JFrame {
         };
 
         JTable table = new JTable(model);
+        this.queueTable = table;
         table.setFillsViewportHeight(true);
         table.setShowGrid(false);
         table.setRowHeight(40);
@@ -427,12 +566,15 @@ public class AdminDashboardFrame extends JFrame {
         table.setSelectionBackground(new Color(245, 245, 255));
         table.setSelectionForeground(ColorPalette.TEXT_PRIMARY);
         table.setBorder(BorderFactory.createEmptyBorder());
+        table.setIntercellSpacing(new Dimension(0, 0));
+        table.setShowHorizontalLines(false);
+        table.setShowVerticalLines(false);
 
         JTableHeader tableHeader = table.getTableHeader();
         tableHeader.setBackground(Color.WHITE);
         tableHeader.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        tableHeader.setForeground(Color.BLACK);
-        tableHeader.setBorder(BorderFactory.createEmptyBorder());
+        tableHeader.setForeground(ColorPalette.TEXT_SECONDARY);
+        tableHeader.setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(230, 230, 235)));
 
         table.getColumnModel().getColumn(4).setCellRenderer(new DefaultTableCellRenderer() {
             @Override
@@ -469,8 +611,158 @@ public class AdminDashboardFrame extends JFrame {
         tableScroll.getViewport().setBackground(Color.WHITE);
 
         card.add(header, BorderLayout.NORTH);
-        card.add(tableScroll, BorderLayout.CENTER);
+        card.add(controlPanel, BorderLayout.CENTER);
+        card.add(tableScroll, BorderLayout.SOUTH);
 
         return card;
+    }
+
+    private String mapStatusLabel(String status) {
+        if (status == null) return "";
+        switch (status) {
+            case "MENUNGGU":
+                return "Menunggu";
+            case "DIPANGGIL":
+                return "Dipanggil";
+            case "SELESAI":
+                return "Selesai";
+            case "BATAL":
+                return "Batal";
+            default:
+                return status;
+        }
+    }
+
+    private String formatWaitingTime(QueueDao.QueueItem item) {
+        if (item.createdAt == null) {
+            return "-";
+        }
+        long endMillis;
+        if (item.finishedAt != null) {
+            endMillis = item.finishedAt.getTime();
+        } else if (item.calledAt != null) {
+            endMillis = item.calledAt.getTime();
+        } else {
+            endMillis = System.currentTimeMillis();
+        }
+        long diffMinutes = Math.max(0, (endMillis - item.createdAt.getTime()) / (60 * 1000));
+        return diffMinutes + " mnt";
+    }
+
+    private void updateStatsValues() {
+        DashboardStatsDao dao = new DashboardStatsDao();
+        DashboardStatsDao.Overview overview = dao.loadOverview();
+
+        if (lblTotalPatients != null) {
+            lblTotalPatients.setText(String.valueOf(overview.totalPatients));
+        }
+        if (lblAvgWait != null) {
+            lblAvgWait.setText(overview.averageWaitMinutes + " mnt");
+        }
+        if (lblActiveCounters != null) {
+            lblActiveCounters.setText(String.valueOf(overview.activeCounters));
+        }
+        if (lblValidQueues != null) {
+            lblValidQueues.setText(String.valueOf(overview.validQueues));
+        }
+    }
+
+    private void reloadDashboardData() {
+        // Perbarui ringkasan statistik di kartu atas
+        updateStatsValues();
+
+        analyticsCard = createAnalyticsCard();
+        queueCard = createQueueManagementCard();
+        cardPanel.removeAll();
+        cardPanel.add(analyticsCard, "ANALYTICS");
+        cardPanel.add(queueCard, "QUEUE");
+        cardPanel.revalidate();
+        cardPanel.repaint();
+        cardLayout.show(cardPanel, currentCardName);
+    }
+
+    private LoketItem getSelectedLoket() {
+        Object selected = loketCombo != null ? loketCombo.getSelectedItem() : null;
+        return (selected instanceof LoketItem) ? (LoketItem) selected : null;
+    }
+
+    private void handleCallNext() {
+        LoketItem loket = getSelectedLoket();
+        if (loket == null) {
+            JOptionPane.showMessageDialog(this, "Pilih loket terlebih dahulu.", "Informasi",
+                    JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+        QueueDao dao = new QueueDao();
+
+        if (dao.hasActiveForLoket(loket.id)) {
+            JOptionPane.showMessageDialog(this,
+                    "Loket " + loket.name + " masih melayani pasien.\n" +
+                            "Selesaikan terlebih dahulu atau pilih loket lain.",
+                    "Loket Masih Terpakai",
+                    JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        QueueDao.QueueItem item = dao.callNextForLoket(loket.id);
+        if (item == null) {
+            JOptionPane.showMessageDialog(this, "Tidak ada antrian MENUNGGU.", "Informasi",
+                    JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(this,
+                    "Memanggil nomor " + item.nomorAntrian + " (" + item.patientName + ") di " + loket.name,
+                    "Panggil Berikutnya", JOptionPane.INFORMATION_MESSAGE);
+        }
+        reloadDashboardData();
+    }
+
+    private void handleFinish() {
+        String nomor = getSelectedNomorAntrian();
+        if (nomor == null) return;
+        QueueDao dao = new QueueDao();
+        dao.markFinishedByNomor(nomor);
+        reloadDashboardData();
+    }
+
+    private void handleCancel() {
+        String nomor = getSelectedNomorAntrian();
+        if (nomor == null) return;
+        QueueDao dao = new QueueDao();
+        dao.markCancelledByNomor(nomor);
+        reloadDashboardData();
+    }
+
+    private void handleRecall() {
+        String nomor = getSelectedNomorAntrian();
+        if (nomor == null) return;
+        QueueDao dao = new QueueDao();
+        dao.recallByNomor(nomor);
+        reloadDashboardData();
+    }
+
+    private String getSelectedNomorAntrian() {
+        if (queueTable == null || queueTable.getSelectedRow() < 0) {
+            JOptionPane.showMessageDialog(this, "Pilih baris antrian terlebih dahulu.", "Informasi",
+                    JOptionPane.INFORMATION_MESSAGE);
+            return null;
+        }
+        int row = queueTable.getSelectedRow();
+        Object value = queueTable.getValueAt(row, 0);
+        return value != null ? value.toString() : null;
+    }
+
+    private static class LoketItem {
+        final int id;
+        final String name;
+
+        LoketItem(int id, String name) {
+            this.id = id;
+            this.name = name;
+        }
+
+        @Override
+        public String toString() {
+            return name;
+        }
     }
 }

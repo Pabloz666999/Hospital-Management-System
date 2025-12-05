@@ -9,7 +9,7 @@ import java.util.concurrent.Future;
 
 public class DatabaseManager {
 
-    private static final String URL = "jdbc:mysql://localhost:3306/[nama-database]";
+    private static final String URL = "jdbc:mysql://localhost:3306/hospital_db";
     private static final String USER = "root";
     private static final String PASSWORD = "";
 

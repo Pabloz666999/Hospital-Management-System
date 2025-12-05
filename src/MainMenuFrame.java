@@ -10,7 +10,7 @@ public class MainMenuFrame extends JFrame {
         setTitle("Ruang Sehat - Hospital Management System");
         setSize(1000, 650); 
         setResizable(false);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(null);
         
         JPanel mainPanel = new JPanel(new GridBagLayout());

@@ -8,7 +8,8 @@ public class Main {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            new MainMenuFrame();
+            // Tampilan utama untuk pasien: layar antrian
+            new DisplayBoardFrame();
         });
     }
 }
