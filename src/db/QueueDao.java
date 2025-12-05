@@ -15,6 +15,8 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class QueueDao {
 
@@ -91,6 +93,16 @@ public class QueueDao {
 
         public PoliCount(String poliName, int total) {
             this.poliName = poliName;
+            this.total = total;
+        }
+    }
+
+    public static class MinuteTrendPoint {
+        public final String minuteLabel;
+        public final int total;
+
+        public MinuteTrendPoint(String minuteLabel, int total) {
+            this.minuteLabel = minuteLabel;
             this.total = total;
         }
     }
@@ -333,6 +345,31 @@ public class QueueDao {
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+        return result;
+    }
+
+    public List<MinuteTrendPoint> loadQueueTrendLastMinutes(int minutesBack) {
+        String sql = "SELECT DATE_FORMAT(created_at, '%H:%i') AS minute_label, COUNT(*) AS total " +
+                "FROM antrian " +
+                "WHERE created_at >= (NOW() - INTERVAL ? MINUTE) " +
+                "GROUP BY minute_label " +
+                "ORDER BY minute_label";
+        Map<String, Integer> map = new LinkedHashMap<>();
+        try (Connection conn = DatabaseManager.getInstance().openConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, minutesBack);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    map.put(rs.getString("minute_label"), rs.getInt("total"));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        List<MinuteTrendPoint> result = new ArrayList<>();
+        for (Map.Entry<String, Integer> entry : map.entrySet()) {
+            result.add(new MinuteTrendPoint(entry.getKey(), entry.getValue()));
         }
         return result;
     }

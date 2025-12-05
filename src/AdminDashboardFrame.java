@@ -14,6 +14,11 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.data.category.DefaultCategoryDataset;
+
 public class AdminDashboardFrame extends JFrame {
 
     private CardLayout cardLayout;
@@ -366,9 +371,9 @@ public class AdminDashboardFrame extends JFrame {
         header.setOpaque(false);
         header.setBorder(BorderFactory.createEmptyBorder(15, 20, 5, 20));
 
-        JLabel title = new JLabel("Statistik Departemen");
+        JLabel title = new JLabel("Tren Antrian");
         title.setFont(new Font("Segoe UI", Font.BOLD, 15));
-        JLabel subtitle = new JLabel("Distribusi pasien per poli (hari ini)");
+        JLabel subtitle = new JLabel("Jumlah antrian baru per menit (60 menit terakhir)");
         subtitle.setFont(new Font("Segoe UI", Font.PLAIN, 11));
         subtitle.setForeground(ColorPalette.TEXT_SECONDARY);
 
@@ -389,40 +394,37 @@ public class AdminDashboardFrame extends JFrame {
             }
         };
         chartPlaceholder.setOpaque(false);
-        chartPlaceholder.setLayout(new GridLayout(0, 1, 10, 5));
         chartPlaceholder.setBorder(BorderFactory.createEmptyBorder(10, 25, 15, 25));
+        chartPlaceholder.setLayout(new BorderLayout());
 
         QueueDao queueDao = new QueueDao();
-        java.util.List<QueueDao.PoliCount> counts = queueDao.loadPoliCountsToday();
+        java.util.List<QueueDao.MinuteTrendPoint> points =
+                queueDao.loadQueueTrendLastMinutes(60);
 
-        if (counts.isEmpty()) {
-            JLabel empty = new JLabel("Belum ada data antrian hari ini.");
+        if (points.isEmpty()) {
+            JLabel empty = new JLabel("Belum ada data antrian pada 60 menit terakhir.");
             empty.setForeground(ColorPalette.TEXT_SECONDARY);
             empty.setFont(new Font("Segoe UI", Font.PLAIN, 12));
             empty.setHorizontalAlignment(SwingConstants.CENTER);
-            chartPlaceholder.setLayout(new BorderLayout());
             chartPlaceholder.add(empty, BorderLayout.CENTER);
         } else {
-            int max = 1;
-            for (QueueDao.PoliCount pc : counts) {
-                if (pc.total > max) {
-                    max = pc.total;
-                }
+            DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+            for (QueueDao.MinuteTrendPoint p : points) {
+                dataset.addValue(p.total, "Antrian", p.minuteLabel);
             }
-            Color[] colors = {
-                    new Color(130, 100, 255),
-                    new Color(244, 67, 54),
-                    new Color(76, 175, 80),
-                    new Color(255, 193, 7),
-                    new Color(0, 188, 212),
-                    new Color(103, 58, 183)
-            };
-            int i = 0;
-            for (QueueDao.PoliCount pc : counts) {
-                Color c = colors[i % colors.length];
-                chartPlaceholder.add(createBarRow(pc.poliName, pc.total, max, c));
-                i++;
-            }
+
+            JFreeChart chart = ChartFactory.createLineChart(
+                    null,
+                    "Waktu (HH:mm)",
+                    "Jumlah Antrian",
+                    dataset
+            );
+
+            ChartPanel chartPanel = new ChartPanel(chart);
+            chartPanel.setOpaque(false);
+            chartPanel.setBackground(new Color(0, 0, 0, 0));
+
+            chartPlaceholder.add(chartPanel, BorderLayout.CENTER);
         }
 
         card.add(header, BorderLayout.NORTH);
