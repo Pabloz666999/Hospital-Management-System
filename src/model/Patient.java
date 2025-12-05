@@ -1,14 +1,12 @@
 package model;
 
-public class Patient {
-    private int id;
-    private String name;
+public class Patient extends User {
     private String phoneNumber;
     private String identificationNumber;
     private Polyclinic targetPolyclinic;
 
-    public Patient(int id, String name, String phoneNumber,
-                   String identificationNumber, Polyclinic targetPolyclinic) {
+    public Patient(int id, String name, String phoneNumber, String identificationNumber, Polyclinic targetPolyclinic) {
+        super(id, name);
         this.id = id;
         this.name = name;
         this.phoneNumber = phoneNumber;
