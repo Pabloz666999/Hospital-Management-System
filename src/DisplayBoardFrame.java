@@ -1,20 +1,13 @@
 import db.QueueDao;
-import db.AdminDao;
-import model.Admin;
 import scheduler.CounterHighlightScheduler;
 import scheduler.QueueRefreshScheduler;
 import components.ColorPalette;
 import components.ModernButton;
-import components.ModernTextField;
-import components.ModernPasswordField;
-import components.RoundedBorder;
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -40,18 +33,6 @@ public class DisplayBoardFrame extends JFrame {
     private QueueRefreshScheduler refreshScheduler;
     private CounterHighlightScheduler highlightScheduler;
 
-    private CardLayout rootLayout;
-    private JPanel rootPanel;
-    private JPanel mainPanel;
-    private JPanel loginPanel;
-    private JPanel mainMenuPanel;
-    private PatientRegistration registrationPanel;
-    private AdminDashboardFrame adminDashboardPanel;
-
-    private ModernTextField loginUsernameField;
-    private ModernPasswordField loginPasswordField;
-    private final AdminDao adminDao = new AdminDao();
-
     public DisplayBoardFrame() {
         setTitle("Ruang Sehat - Layar Antrian");
         setUndecorated(true);
@@ -60,12 +41,14 @@ public class DisplayBoardFrame extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
+        // Load data awal
         QueueDao queueDao = new QueueDao();
         nowServingData = queueDao.loadNowServing();
         waitingQueue = queueDao.loadWaitingQueue(5);
         counterSummary = queueDao.loadCounterSummary();
 
-        mainPanel = new JPanel(new BorderLayout()) {
+        // Panel Utama dengan Gradient Background
+        JPanel mainPanel = new JPanel(new BorderLayout()) {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
@@ -86,6 +69,7 @@ public class DisplayBoardFrame extends JFrame {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.BOTH;
 
+        // Bagian Kiri (Nomor Dipanggil)
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.weightx = 0.7;
@@ -94,6 +78,7 @@ public class DisplayBoardFrame extends JFrame {
         gbc.insets = new Insets(0, 30, 10, 10);
         contentPanel.add(createLeftSection(), gbc);
 
+        // Bagian Kanan (Daftar Tunggu)
         gbc.gridx = 1;
         gbc.gridy = 0;
         gbc.weightx = 0.3;
@@ -102,6 +87,7 @@ public class DisplayBoardFrame extends JFrame {
         gbc.insets = new Insets(0, 10, 10, 30);
         contentPanel.add(createRightSection(), gbc);
 
+        // Bagian Bawah (Ringkasan Loket)
         gbc.gridx = 0;
         gbc.gridy = 1;
         gbc.gridwidth = 2;
@@ -112,20 +98,7 @@ public class DisplayBoardFrame extends JFrame {
 
         mainPanel.add(contentPanel, BorderLayout.CENTER);
 
-        rootLayout = new CardLayout();
-        rootPanel = new JPanel(rootLayout);
-        rootPanel.setOpaque(false);
-
-        loginPanel = createLoginPanel();
-        mainMenuPanel = createMainMenuPanel();
-        registrationPanel = new PatientRegistration(this::showMainMenuPage);
-        adminDashboardPanel = new AdminDashboardFrame(this::showMainMenuPage);
-
-        rootPanel.add(mainPanel, "DISPLAY");
-        rootPanel.add(loginPanel, "LOGIN");
-        rootPanel.add(mainMenuPanel, "MENU");
-        rootPanel.add(registrationPanel, "REGISTRATION");
-        rootPanel.add(adminDashboardPanel, "DASHBOARD");
+        add(mainPanel);
 
         startClockThread();
         startDataRefresh();
@@ -133,8 +106,6 @@ public class DisplayBoardFrame extends JFrame {
 
         addEscToExit();
 
-        add(rootPanel);
-        rootLayout.show(rootPanel, "DISPLAY");
         setVisible(true);
     }
 
@@ -148,7 +119,7 @@ public class DisplayBoardFrame extends JFrame {
         leftContainer.setOpaque(false);
 
         JLabel logoIcon = new JLabel("🏥");
-        logoIcon.setFont(new Font("Segoe UI", Font.PLAIN, 32));
+        logoIcon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 32));
 
         JPanel textPanel = new JPanel();
         textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
@@ -190,19 +161,7 @@ public class DisplayBoardFrame extends JFrame {
         timePanel.add(dateLabel);
         timePanel.add(timeLabel);
 
-        JButton loginButton = new JButton("⏩  Login Petugas");
-        loginButton.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        loginButton.setForeground(new Color(109, 93, 222));
-        loginButton.setBackground(Color.WHITE);
-        loginButton.setFocusPainted(false);
-        loginButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        loginButton.setAlignmentX(Component.RIGHT_ALIGNMENT);
-        loginButton.setMargin(new Insets(6, 18, 6, 18));
-        loginButton.addActionListener(e -> openStaffArea());
-
-        rightContainer.add(timePanel);
-        rightContainer.add(Box.createVerticalStrut(5));
-
+        // Tombol Login Petugas
         ModernButton staffLoginButton = new ModernButton(
                 "Login Petugas",
                 Color.WHITE,
@@ -212,405 +171,25 @@ public class DisplayBoardFrame extends JFrame {
         staffLoginButton.setAlignmentX(Component.RIGHT_ALIGNMENT);
         staffLoginButton.setPreferredSize(new Dimension(150, 32));
         staffLoginButton.setMaximumSize(new Dimension(160, 32));
-        staffLoginButton.addActionListener(e -> openStaffArea());
+        
+        // AKSI: Pindah ke Frame Login / Menu
+        staffLoginButton.addActionListener(e -> {
+            dispose(); // Tutup layar antrian
+            if (SessionManager.isAdminLoggedIn()) {
+                new MainMenuFrame();
+            } else {
+                new LoginFrame();
+            }
+        });
 
+        rightContainer.add(timePanel);
+        rightContainer.add(Box.createVerticalStrut(5));
         rightContainer.add(staffLoginButton);
 
         header.add(leftContainer, BorderLayout.WEST);
         header.add(rightContainer, BorderLayout.EAST);
 
         return header;
-    }
-
-    private void openStaffArea() {
-        if (SessionManager.isAdminLoggedIn()) {
-            showMainMenuPage();
-        } else {
-            showLoginPage();
-        }
-    }
-
-    private JPanel createLoginPanel() {
-        JPanel page = new JPanel(new GridBagLayout());
-        page.setBackground(ColorPalette.BACKGROUND);
-
-        JPanel card = new JPanel(new GridBagLayout());
-        card.setBackground(Color.WHITE);
-        card.setPreferredSize(new Dimension(840, 480));
-        card.setBorder(BorderFactory.createCompoundBorder(
-                new RoundedBorder(new Color(235, 235, 240), 1, 22),
-                BorderFactory.createEmptyBorder(30, 40, 30, 40)));
-
-        JPanel headerPanel = new JPanel();
-        headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
-        headerPanel.setOpaque(false);
-
-        JLabel titleLabel = new JLabel("Login Petugas");
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 22));
-        titleLabel.setForeground(ColorPalette.PRIMARY);
-        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        JLabel subtitleLabel = new JLabel("Masuk untuk mengelola antrian");
-        subtitleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        subtitleLabel.setForeground(ColorPalette.TEXT_SECONDARY);
-        subtitleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        headerPanel.add(titleLabel);
-        headerPanel.add(Box.createVerticalStrut(6));
-        headerPanel.add(subtitleLabel);
-        headerPanel.add(Box.createVerticalStrut(28));
-
-        loginUsernameField = new ModernTextField("Enter your username");
-        loginUsernameField.setMaximumSize(new Dimension(520, 44));
-
-        loginPasswordField = new ModernPasswordField("Enter your password");
-        loginPasswordField.setMaximumSize(new Dimension(520, 44));
-        loginPasswordField.addActionListener(e -> handleInlineLogin());
-
-        JPanel formColumn = new JPanel();
-        formColumn.setLayout(new BoxLayout(formColumn, BoxLayout.Y_AXIS));
-        formColumn.setOpaque(false);
-        formColumn.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        formColumn.add(createLoginField("Username", loginUsernameField));
-        formColumn.add(Box.createVerticalStrut(18));
-        formColumn.add(createLoginField("Password", loginPasswordField));
-        formColumn.add(Box.createVerticalStrut(26));
-
-        JPanel buttonRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 16, 0));
-        buttonRow.setOpaque(false);
-
-        JButton cancelButton = new JButton("Batal");
-        cancelButton.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        cancelButton.setForeground(ColorPalette.TEXT_SECONDARY);
-        cancelButton.setBackground(Color.WHITE);
-        cancelButton.setFocusPainted(false);
-        cancelButton.setContentAreaFilled(false);
-        cancelButton.setOpaque(false);
-        cancelButton.setBorder(BorderFactory.createEmptyBorder(4, 4, 4, 4));
-        cancelButton.addActionListener(e -> showDisplayPage());
-
-        ModernButton loginButton = new ModernButton("Login",
-                ColorPalette.PRIMARY,
-                ColorPalette.PRIMARY_DARK);
-        loginButton.setPreferredSize(new Dimension(190, 42));
-        loginButton.addActionListener(e -> handleInlineLogin());
-
-        buttonRow.add(cancelButton);
-        buttonRow.add(loginButton);
-
-        formColumn.add(buttonRow);
-
-        GridBagConstraints gch = new GridBagConstraints();
-        gch.gridx = 0;
-        gch.gridy = 0;
-        gch.weightx = 1.0;
-        gch.anchor = GridBagConstraints.NORTH;
-        gch.insets = new Insets(0, 0, 10, 0);
-        card.add(headerPanel, gch);
-
-        GridBagConstraints gcf = new GridBagConstraints();
-        gcf.gridx = 0;
-        gcf.gridy = 1;
-        gcf.weightx = 1.0;
-        gcf.weighty = 1.0;
-        gcf.anchor = GridBagConstraints.NORTH;
-        card.add(formColumn, gcf);
-
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.weightx = 1.0;
-        gbc.weighty = 1.0;
-        gbc.anchor = GridBagConstraints.CENTER;
-        page.add(card, gbc);
-
-        return page;
-    }
-
-    private JPanel createLoginField(String labelText, JComponent field) {
-        JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setOpaque(false);
-        panel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        panel.setMaximumSize(new Dimension(520, 90));
-
-        JLabel label = new JLabel(labelText);
-        label.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        label.setForeground(ColorPalette.TEXT_PRIMARY);
-        label.setAlignmentX(Component.CENTER_ALIGNMENT);
-        field.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        panel.add(label);
-        panel.add(Box.createVerticalStrut(5));
-        panel.add(field);
-        return panel;
-    }
-
-    private JPanel createMainMenuPanel() {
-        JPanel main = new JPanel(new GridBagLayout());
-        main.setOpaque(false);
-
-        JPanel contentWrapper = new JPanel();
-        contentWrapper.setLayout(new BoxLayout(contentWrapper, BoxLayout.Y_AXIS));
-        contentWrapper.setOpaque(false);
-        contentWrapper.setPreferredSize(new Dimension(900, 480));
-
-        JPanel headerPanel = createMainMenuHeader();
-        headerPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        JPanel cardsPanel = new JPanel(new GridLayout(1, 3, 30, 0));
-        cardsPanel.setBackground(ColorPalette.BACKGROUND);
-        cardsPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
-
-        cardsPanel.add(createMainMenuCard(
-                "📱",
-                "Registrasi Pasien",
-                "Pendaftaran layanan oleh petugas & pembuatan QR Code otomatis",
-                this::showRegistrationPage
-        ));
-
-        cardsPanel.add(createMainMenuCard(
-                "📺",
-                "Layar Antrian",
-                "Pemantauan status antrian secara real-time di ruang tunggu",
-                this::showDisplayPage));
-
-        cardsPanel.add(createMainMenuCard(
-                "📊",
-                "Dashboard Admin",
-                "Sistem manajemen antrian yang komprehensif dengan fitur analitik",
-                () -> new AdminDashboardFrame()));
-
-        contentWrapper.add(headerPanel);
-        contentWrapper.add(Box.createVerticalStrut(30));
-        contentWrapper.add(cardsPanel);
-
-        main.add(contentWrapper);
-        return main;
-    }
-
-    private JPanel createMainMenuHeader() {
-        JPanel container = new JPanel();
-        container.setLayout(new BoxLayout(container, BoxLayout.Y_AXIS));
-        container.setOpaque(false);
-
-        JPanel titleRow = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
-        titleRow.setOpaque(false);
-        titleRow.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        JPanel logoIcon = new JPanel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                Graphics2D g2 = (Graphics2D) g;
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                GradientPaint gp = new GradientPaint(0, 0, new Color(120, 100, 230), 0, getHeight(),
-                        new Color(90, 70, 200));
-                g2.setPaint(gp);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 15, 15);
-            }
-        };
-        logoIcon.setPreferredSize(new Dimension(45, 45));
-        logoIcon.setLayout(new GridBagLayout());
-        JLabel emojiLogo = new JLabel("📱");
-        emojiLogo.setFont(new Font("Segoe UI", Font.PLAIN, 22));
-        emojiLogo.setForeground(Color.WHITE);
-        logoIcon.add(emojiLogo);
-
-        JLabel titleLabel = new JLabel("Ruang Sehat");
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 28));
-        titleLabel.setForeground(new Color(60, 50, 120));
-
-        titleRow.add(logoIcon);
-        titleRow.add(titleLabel);
-
-        JLabel instructionLabel = new JLabel("Silakan pilih fitur yang ingin Anda lihat");
-        instructionLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        instructionLabel.setForeground(Color.GRAY);
-        instructionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        container.add(titleRow);
-        container.add(Box.createVerticalStrut(8));
-        container.add(instructionLabel);
-
-        return container;
-    }
-
-    private JPanel createMainMenuCard(String iconEmoji, String title, String description, Runnable onClick) {
-        JPanel card = new JPanel() {
-            private boolean isHovered = false;
-
-            {
-                addMouseListener(new MouseAdapter() {
-                    @Override
-                    public void mouseEntered(MouseEvent e) {
-                        isHovered = true;
-                        repaint();
-                    }
-
-                    @Override
-                    public void mouseExited(MouseEvent e) {
-                        isHovered = false;
-                        repaint();
-                    }
-                });
-            }
-
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-                int w = getWidth() - 1;
-                int h = getHeight() - 1;
-                int arc = 25;
-
-                g2.setColor(Color.WHITE);
-                g2.fillRoundRect(0, 0, w, h, arc, arc);
-
-                if (isHovered) {
-                    g2.setColor(ColorPalette.PRIMARY);
-                    g2.setStroke(new BasicStroke(1.5f));
-                } else {
-                    g2.setColor(new Color(230, 230, 230));
-                    g2.setStroke(new BasicStroke(1f));
-                }
-                g2.drawRoundRect(0, 0, w, h, arc, arc);
-                g2.dispose();
-            }
-        };
-
-        card.setLayout(new GridBagLayout());
-        card.setOpaque(false);
-        card.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        JPanel contentInfo = new JPanel();
-        contentInfo.setLayout(new BoxLayout(contentInfo, BoxLayout.Y_AXIS));
-        contentInfo.setOpaque(false);
-
-        JPanel iconBg = new JPanel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                Graphics2D g2 = (Graphics2D) g;
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                GradientPaint gp = new GradientPaint(0, 0, new Color(130, 110, 240), 0, getHeight(),
-                        new Color(90, 70, 200));
-                g2.setPaint(gp);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20);
-            }
-        };
-        iconBg.setPreferredSize(new Dimension(70, 70));
-        iconBg.setMaximumSize(new Dimension(70, 70));
-        iconBg.setLayout(new GridBagLayout());
-        iconBg.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        JLabel iconLabel = new JLabel(iconEmoji);
-        iconLabel.setFont(new Font("Segoe UI", Font.PLAIN, 34));
-        iconLabel.setForeground(Color.WHITE);
-        iconBg.add(iconLabel);
-
-        JLabel titleLabel = new JLabel(title);
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        titleLabel.setForeground(new Color(80, 60, 160));
-        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        JLabel descLabel = new JLabel("<html><center>" + description + "</center></html>");
-        descLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        descLabel.setForeground(Color.GRAY);
-        descLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        descLabel.setPreferredSize(new Dimension(180, 50));
-        descLabel.setMaximumSize(new Dimension(200, 60));
-
-        contentInfo.add(iconBg);
-        contentInfo.add(Box.createVerticalStrut(25));
-        contentInfo.add(titleLabel);
-        contentInfo.add(Box.createVerticalStrut(10));
-        contentInfo.add(descLabel);
-
-        card.add(contentInfo);
-
-        card.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if ("Dashboard Admin".equals(title)) {
-                    showDashboardPage();
-                } else if ("Registrasi Pasien".equals(title)) {
-                    showRegistrationPage();
-                } else if ("Layar Antrian".equals(title)) {
-                    showDisplayPage();
-                } else if (onClick != null) {
-                    onClick.run();
-                }
-            }
-        });
-
-        JPanel wrapper = new JPanel(new BorderLayout());
-        wrapper.setOpaque(false);
-        wrapper.setPreferredSize(new Dimension(260, 300));
-        wrapper.add(card);
-
-        return wrapper;
-    }
-
-    private void showLoginPage() {
-        if (rootLayout != null && rootPanel != null) {
-            rootLayout.show(rootPanel, "LOGIN");
-        }
-    }
-
-    private void showDisplayPage() {
-        if (rootLayout != null && rootPanel != null) {
-            rootLayout.show(rootPanel, "DISPLAY");
-        }
-    }
-
-    private void showMainMenuPage() {
-        if (rootLayout != null && rootPanel != null) {
-            rootLayout.show(rootPanel, "MENU");
-        }
-    }
-
-    private void showRegistrationPage() {
-        if (rootLayout != null && rootPanel != null) {
-            rootLayout.show(rootPanel, "REGISTRATION");
-        }
-    }
-
-    private void showDashboardPage() {
-        if (rootLayout != null && rootPanel != null) {
-            rootLayout.show(rootPanel, "DASHBOARD");
-        }
-    }
-
-    private void handleInlineLogin() {
-        if (loginUsernameField == null || loginPasswordField == null) {
-            return;
-        }
-        String username = loginUsernameField.getText();
-        String password = new String(loginPasswordField.getPassword());
-
-        if (username.trim().isEmpty() || password.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                    "Silakan isi username dan password.",
-                    "Validasi Login",
-                    JOptionPane.WARNING_MESSAGE);
-            return;
-        }
-
-        Admin admin = adminDao.findByCredentials(username.trim(), password);
-        if (admin == null) {
-            JOptionPane.showMessageDialog(this,
-                    "Username atau password salah.",
-                    "Login Gagal",
-                    JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        SessionManager.setAdminLoggedIn(admin);
-        showMainMenuPage();
     }
 
     private JPanel createLeftSection() {
@@ -624,13 +203,12 @@ public class DisplayBoardFrame extends JFrame {
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 30, 30);
             }
         };
-        mainCard.setLayout(new BorderLayout());
+        mainCard.setLayout(new GridBagLayout());
         mainCard.setOpaque(false);
 
         JPanel contentWrapper = new JPanel();
         contentWrapper.setLayout(new BoxLayout(contentWrapper, BoxLayout.Y_AXIS));
         contentWrapper.setOpaque(false);
-        contentWrapper.setBorder(BorderFactory.createEmptyBorder(15, 0, 15, 0));
 
         JLabel servingLabel = new JLabel("Nomor Antrian Dipanggil");
         servingLabel.setFont(new Font("Segoe UI", Font.PLAIN, 18));
@@ -649,9 +227,13 @@ public class DisplayBoardFrame extends JFrame {
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 30, 30);
             }
         };
-        numberBox.setMaximumSize(new Dimension(500, 220));
-        numberBox.setLayout(new BoxLayout(numberBox, BoxLayout.Y_AXIS));
-        numberBox.setBorder(BorderFactory.createEmptyBorder(20, 0, 20, 0));
+        numberBox.setMaximumSize(new Dimension(500, 200));
+        numberBox.setLayout(new GridBagLayout());
+        numberBox.setOpaque(false);
+
+        JPanel numberContent = new JPanel();
+        numberContent.setLayout(new BoxLayout(numberContent, BoxLayout.Y_AXIS));
+        numberContent.setOpaque(false);
 
         String ticketText = nowServingData != null && nowServingData.nomorAntrian != null
                 ? nowServingData.nomorAntrian
@@ -669,9 +251,11 @@ public class DisplayBoardFrame extends JFrame {
         nowServingPoliLabel.setForeground(new Color(220, 220, 255));
         nowServingPoliLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        numberBox.add(nowServingNumberLabel);
-        numberBox.add(Box.createVerticalStrut(5));
-        numberBox.add(nowServingPoliLabel);
+        numberContent.add(nowServingNumberLabel);
+        numberContent.add(Box.createVerticalStrut(5));
+        numberContent.add(nowServingPoliLabel);
+
+        numberBox.add(numberContent);
 
         JPanel counterPanel = new JPanel();
         counterPanel.setLayout(new BoxLayout(counterPanel, BoxLayout.Y_AXIS));
@@ -691,29 +275,39 @@ public class DisplayBoardFrame extends JFrame {
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20);
             }
         };
-        counterBox.setPreferredSize(new Dimension(120, 70));
-        counterBox.setMaximumSize(new Dimension(120, 70));
+        counterBox.setPreferredSize(new Dimension(140, 85));
+        counterBox.setMaximumSize(new Dimension(140, 85));
         counterBox.setLayout(new GridBagLayout());
 
         String counterText = nowServingData != null && nowServingData.loketName != null
                 ? nowServingData.loketName.replace("Loket", "").trim()
                 : "-";
         nowServingLoketLabel = new JLabel(counterText);
-        nowServingLoketLabel.setFont(new Font("Segoe UI", Font.BOLD, 36));
+        nowServingLoketLabel.setFont(new Font("Segoe UI", Font.BOLD, 42));
         nowServingLoketLabel.setForeground(Color.WHITE);
         counterBox.add(nowServingLoketLabel);
 
         counterPanel.add(counterLabel);
-        counterPanel.add(Box.createVerticalStrut(5));
+        counterPanel.add(Box.createVerticalStrut(8));
         counterPanel.add(counterBox);
 
+        contentWrapper.add(Box.createVerticalGlue());
         contentWrapper.add(servingLabel);
-        contentWrapper.add(Box.createVerticalStrut(10));
+        contentWrapper.add(Box.createVerticalStrut(15));
         contentWrapper.add(numberBox);
-        contentWrapper.add(Box.createVerticalStrut(20));
+        contentWrapper.add(Box.createVerticalStrut(25));
         contentWrapper.add(counterPanel);
+        contentWrapper.add(Box.createVerticalGlue());
 
-        mainCard.add(contentWrapper, BorderLayout.CENTER);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 1.0;
+        gbc.weighty = 1.0;
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.insets = new Insets(20, 20, 20, 20);
+
+        mainCard.add(contentWrapper, gbc);
 
         return mainCard;
     }
@@ -728,7 +322,7 @@ public class DisplayBoardFrame extends JFrame {
 
         JLabel icon = new JLabel("⏳");
         icon.setForeground(Color.WHITE);
-        icon.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        icon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 16));
 
         JLabel label = new JLabel("Daftar Antrian Berikutnya");
         label.setFont(new Font("Segoe UI", Font.BOLD, 16));
@@ -822,18 +416,18 @@ public class DisplayBoardFrame extends JFrame {
         bottomPanel.setOpaque(false);
 
         JLabel title = new JLabel("Ringkasan Loket");
-        title.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        title.setFont(new Font("Segoe UI", Font.BOLD, 15));
         title.setForeground(new Color(230, 230, 255));
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         countersRow = new JPanel();
-        countersRow.setLayout(new FlowLayout(FlowLayout.CENTER, 20, 10));
+        countersRow.setLayout(new FlowLayout(FlowLayout.CENTER, 25, 15));
         countersRow.setOpaque(false);
 
         rebuildCountersRow(bottomPanel);
 
         bottomPanel.add(title);
-        bottomPanel.add(Box.createVerticalStrut(5));
+        bottomPanel.add(Box.createVerticalStrut(8));
         bottomPanel.add(countersRow);
         bottomPanel.add(Box.createVerticalGlue());
 
@@ -852,25 +446,25 @@ public class DisplayBoardFrame extends JFrame {
             }
         };
         innerBox.setOpaque(false);
-        innerBox.setPreferredSize(new Dimension(80, 100));
-        innerBox.setBorder(BorderFactory.createEmptyBorder(10, 5, 10, 5));
+        innerBox.setPreferredSize(new Dimension(110, 120));
+        innerBox.setBorder(BorderFactory.createEmptyBorder(12, 8, 12, 8));
 
         JPanel content = new JPanel();
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
         content.setOpaque(false);
 
         JLabel counterLbl = new JLabel("LOKET " + counterNum);
-        counterLbl.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        counterLbl.setFont(new Font("Segoe UI", Font.PLAIN, 12));
         counterLbl.setForeground(new Color(180, 180, 255));
         counterLbl.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         JLabel ticketLbl = new JLabel(ticketNum);
-        ticketLbl.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        ticketLbl.setFont(new Font("Segoe UI", Font.BOLD, 32));
         ticketLbl.setForeground(Color.WHITE);
         ticketLbl.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         content.add(counterLbl);
-        content.add(Box.createVerticalStrut(5));
+        content.add(Box.createVerticalStrut(8));
         content.add(ticketLbl);
 
         innerBox.add(content);
@@ -1030,9 +624,5 @@ public class DisplayBoardFrame extends JFrame {
                 System.exit(0);
             }
         });
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new DisplayBoardFrame());
     }
 }

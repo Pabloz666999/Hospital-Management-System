@@ -3,153 +3,117 @@ import components.ModernButton;
 import components.ModernPasswordField;
 import components.ModernTextField;
 import components.RoundedBorder;
-
 import db.AdminDao;
 import model.Admin;
 
-import java.awt.*;
 import javax.swing.*;
+import java.awt.*;
 
 public class LoginFrame extends JFrame {
+    
     private ModernTextField usernameField;
     private ModernPasswordField passwordField;
     private final AdminDao adminDao = new AdminDao();
 
     public LoginFrame() {
-        setTitle("Ruang Sehat - Login");
-        setSize(1000, 650);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        setLocationRelativeTo(null);
+        setTitle("Ruang Sehat - Login Petugas");
+        setUndecorated(true);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
         setResizable(false);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
 
-        JPanel mainPanel = new JPanel(new BorderLayout());
+        // Panel Utama
+        JPanel mainPanel = new JPanel(new GridBagLayout());
         mainPanel.setBackground(ColorPalette.BACKGROUND);
 
-        JPanel leftPanel = createLeftPanel();
+        // Kartu Login
+        JPanel loginCard = new JPanel();
+        loginCard.setLayout(new BoxLayout(loginCard, BoxLayout.Y_AXIS));
+        loginCard.setBackground(Color.WHITE);
+        loginCard.setPreferredSize(new Dimension(500, 450)); 
+        loginCard.setMaximumSize(new Dimension(500, 450));
+        
+        loginCard.setBorder(BorderFactory.createCompoundBorder(
+                new RoundedBorder(new Color(230, 230, 235), 1, 25),
+                BorderFactory.createEmptyBorder(40, 50, 40, 50)));
 
-        JPanel rightPanel = createRightPanel();
+        // --- KONTEN ---
+        JLabel titleLabel = new JLabel("Login Petugas");
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 26));
+        titleLabel.setForeground(ColorPalette.PRIMARY);
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        mainPanel.add(leftPanel, BorderLayout.WEST);
-        mainPanel.add(rightPanel, BorderLayout.CENTER);
+        JLabel subtitleLabel = new JLabel("Masuk untuk mengelola antrian");
+        subtitleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        subtitleLabel.setForeground(ColorPalette.TEXT_SECONDARY);
+        subtitleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        usernameField = new ModernTextField("Masukkan username");
+        usernameField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
+        
+        passwordField = new ModernPasswordField("Masukkan password");
+        passwordField.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
+        passwordField.addActionListener(e -> handleLogin()); 
+
+        ModernButton loginButton = new ModernButton("Login", ColorPalette.PRIMARY, ColorPalette.PRIMARY_DARK);
+        loginButton.setPreferredSize(new Dimension(150, 40));
+        loginButton.setMaximumSize(new Dimension(Integer.MAX_VALUE, 45));
+        loginButton.addActionListener(e -> handleLogin());
+
+        JButton cancelButton = new JButton("Batal");
+        cancelButton.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        cancelButton.setForeground(ColorPalette.TEXT_SECONDARY);
+        cancelButton.setContentAreaFilled(false);
+        cancelButton.setBorderPainted(false);
+        cancelButton.setFocusPainted(false);
+        cancelButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        cancelButton.addActionListener(e -> {
+            dispose();
+            new DisplayBoardFrame(); // Kembali ke layar antrian
+        });
+
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
+        buttonPanel.setBackground(Color.WHITE);
+        buttonPanel.add(cancelButton);
+        buttonPanel.add(loginButton);
+        buttonPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
+
+        // Menyusun Komponen
+        loginCard.add(Box.createVerticalStrut(10));
+        loginCard.add(titleLabel);
+        loginCard.add(Box.createVerticalStrut(5));
+        loginCard.add(subtitleLabel);
+        loginCard.add(Box.createVerticalStrut(35));
+        
+        loginCard.add(createLabel("Username"));
+        loginCard.add(Box.createVerticalStrut(5));
+        loginCard.add(usernameField);
+        
+        loginCard.add(Box.createVerticalStrut(15));
+        
+        loginCard.add(createLabel("Password"));
+        loginCard.add(Box.createVerticalStrut(5));
+        loginCard.add(passwordField);
+        
+        loginCard.add(Box.createVerticalStrut(30));
+        loginCard.add(buttonPanel);
+
+        mainPanel.add(loginCard);
 
         add(mainPanel);
         setVisible(true);
     }
 
-    private JPanel createLeftPanel() {
-        JPanel panel = new JPanel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                Graphics2D g2 = (Graphics2D) g;
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-                GradientPaint gp = new GradientPaint(0, 0, ColorPalette.PRIMARY, getWidth(), getHeight(),
-                        ColorPalette.SECONDARY);
-                g2.setPaint(gp);
-                g2.fillRect(0, 0, getWidth(), getHeight());
-
-                g2.setColor(new Color(255, 255, 255, 40));
-                g2.fillRoundRect(150, 150, 200, 250, 30, 30);
-
-                g2.setColor(Color.WHITE);
-                g2.setStroke(new BasicStroke(15, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-                g2.drawLine(250, 210, 250, 310);
-                g2.drawLine(200, 260, 300, 260);
-
-                g2.setColor(new Color(255, 255, 255, 20));
-                g2.fillOval(50, 50, 100, 100);
-                g2.fillOval(350, 500, 150, 150);
-            }
-        };
-        panel.setPreferredSize(new Dimension(500, 650));
-        return panel;
-    }
-
-    private JPanel createRightPanel() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBackground(ColorPalette.BACKGROUND);
-
-        JPanel loginCard = new JPanel();
-        loginCard.setLayout(new BoxLayout(loginCard, BoxLayout.Y_AXIS));
-        loginCard.setBackground(Color.WHITE);
-        loginCard.setPreferredSize(new Dimension(400, 520));
-
-        loginCard.setBorder(BorderFactory.createCompoundBorder(
-                new RoundedBorder(new Color(235, 235, 240), 1, 20),
-                BorderFactory.createEmptyBorder(40, 40, 40, 40)));
-
-        JLabel iconLabel = new JLabel("🏥");
-        iconLabel.setFont(new Font("Segoe UI", Font.PLAIN, 50));
-        iconLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        JLabel titleLabel = new JLabel("Ruang Sehat");
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
-        titleLabel.setForeground(ColorPalette.PRIMARY);
-        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        JLabel subtitleLabel = new JLabel("Admin Login");
-        subtitleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-        subtitleLabel.setForeground(ColorPalette.TEXT_SECONDARY);
-        subtitleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        loginCard.add(Box.createVerticalStrut(10));
-        loginCard.add(iconLabel);
-        loginCard.add(Box.createVerticalStrut(15));
-        loginCard.add(titleLabel);
-        loginCard.add(Box.createVerticalStrut(5));
-        loginCard.add(subtitleLabel);
-        loginCard.add(Box.createVerticalStrut(40));
-
-        JLabel usernameLabel = new JLabel("Username");
-        usernameLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        usernameLabel.setForeground(ColorPalette.TEXT_PRIMARY);
-        usernameLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        JPanel userLabelPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        userLabelPanel.setBackground(Color.WHITE);
-        userLabelPanel.setMaximumSize(new Dimension(340, 20));
-        userLabelPanel.add(usernameLabel);
-
-        usernameField = new ModernTextField("Enter your username");
-        usernameField.setMaximumSize(new Dimension(340, 45));
-        usernameField.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        loginCard.add(userLabelPanel);
-        loginCard.add(Box.createVerticalStrut(5));
-        loginCard.add(usernameField);
-        loginCard.add(Box.createVerticalStrut(20));
-
-        JLabel passwordLabel = new JLabel("Password");
-        passwordLabel.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        passwordLabel.setForeground(ColorPalette.TEXT_PRIMARY);
-
-        JPanel passLabelPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-        passLabelPanel.setBackground(Color.WHITE);
-        passLabelPanel.setMaximumSize(new Dimension(340, 20));
-        passLabelPanel.add(passwordLabel);
-
-        passwordField = new ModernPasswordField("Enter your password");
-        passwordField.setMaximumSize(new Dimension(340, 45));
-        passwordField.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        loginCard.add(passLabelPanel);
-        loginCard.add(Box.createVerticalStrut(5));
-        loginCard.add(passwordField);
-        loginCard.add(Box.createVerticalStrut(30));
-
-        ModernButton loginButton = new ModernButton("Login",
-                ColorPalette.PRIMARY,
-                ColorPalette.PRIMARY_DARK);
-        loginButton.setMaximumSize(new Dimension(340, 45));
-        loginButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        loginButton.addActionListener(e -> handleLogin());
-
-        passwordField.addActionListener(e -> handleLogin());
-
-        loginCard.add(loginButton);
-
-        panel.add(loginCard);
-        return panel;
+    private JPanel createLabel(String text) {
+        JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        p.setBackground(Color.WHITE);
+        JLabel l = new JLabel(text);
+        l.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        l.setForeground(ColorPalette.TEXT_PRIMARY);
+        p.add(l);
+        p.setMaximumSize(new Dimension(Integer.MAX_VALUE, 20));
+        return p;
     }
 
     private void handleLogin() {
@@ -157,24 +121,18 @@ public class LoginFrame extends JFrame {
         String password = new String(passwordField.getPassword());
 
         if (username.trim().isEmpty() || password.isEmpty()) {
-            JOptionPane.showMessageDialog(this,
-                    "Silakan isi username dan password.",
-                    "Validasi Login",
-                    JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Silakan isi username dan password.", "Validasi", JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         Admin admin = adminDao.findByCredentials(username.trim(), password);
-        if (admin == null) {
-            JOptionPane.showMessageDialog(this,
-                    "Username atau password salah.",
-                    "Login Gagal",
-                    JOptionPane.ERROR_MESSAGE);
-            return;
+        
+        if (admin != null) {
+            SessionManager.setAdminLoggedIn(admin);
+            dispose();
+            new MainMenuFrame(); // Masuk ke Menu Utama
+        } else {
+            JOptionPane.showMessageDialog(this, "Username atau password salah!", "Login Gagal", JOptionPane.ERROR_MESSAGE);
         }
-
-        SessionManager.setAdminLoggedIn(admin);
-        dispose();
-        new MainMenuFrame();
     }
 }

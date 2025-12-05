@@ -14,7 +14,7 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-public class AdminDashboardFrame extends JPanel {
+public class AdminDashboardFrame extends JFrame {
 
     private CardLayout cardLayout;
     private JPanel cardPanel;
@@ -28,25 +28,21 @@ public class AdminDashboardFrame extends JPanel {
     private QueueRefreshScheduler refreshScheduler;
     private JComboBox<LoketItem> loketCombo;
 
-    // Label nilai pada kartu statistik
     private JLabel lblTotalPatients;
     private JLabel lblAvgWait;
     private JLabel lblActiveCounters;
     private JLabel lblValidQueues;
 
-    // Callback ketika tombol back di header ditekan
-    private final Runnable onBack;
-
     public AdminDashboardFrame() {
-        this(null);
-    }
+        setTitle("Ruang Sehat - Dashboard Admin");
+        setUndecorated(true);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
+        setResizable(false);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+        
+        getContentPane().setBackground(ColorPalette.BACKGROUND);
 
-    public AdminDashboardFrame(Runnable onBack) {
-        this.onBack = onBack;
-        setLayout(new BorderLayout());
-        setBackground(ColorPalette.BACKGROUND);
-
-        // Inisialisasi label statistik dengan nilai default
         lblTotalPatients = new JLabel("0");
         lblAvgWait = new JLabel("0 mnt");
         lblActiveCounters = new JLabel("0");
@@ -61,17 +57,15 @@ public class AdminDashboardFrame extends JPanel {
         contentPanel.setBackground(ColorPalette.BACKGROUND);
         contentPanel.setBorder(BorderFactory.createEmptyBorder(10, 30, 20, 30));
 
-        // --- ATAS: Statistik + Navigasi ---
         JPanel topContainer = new JPanel();
         topContainer.setLayout(new BoxLayout(topContainer, BoxLayout.Y_AXIS));
         topContainer.setBackground(ColorPalette.BACKGROUND);
 
         topContainer.add(createStatsPanel());
         topContainer.add(Box.createVerticalStrut(20));
-        topContainer.add(createNavigationMenu()); // MENU NAVIGASI BARU
+        topContainer.add(createNavigationMenu()); 
         topContainer.add(Box.createVerticalStrut(15));
 
-        // --- TENGAH: Grafik / Tabel ---
         cardLayout = new CardLayout();
         cardPanel = new JPanel(cardLayout);
         cardPanel.setOpaque(false);
@@ -95,9 +89,8 @@ public class AdminDashboardFrame extends JPanel {
 
         mainPanel.add(contentPanel, BorderLayout.CENTER);
 
-        add(mainPanel, BorderLayout.CENTER);
+        add(mainPanel);
 
-        // Ambil data awal untuk statistik
         updateStatsValues();
 
         refreshScheduler = new QueueRefreshScheduler(() -> SwingUtilities.invokeLater(this::reloadDashboardData));
@@ -233,14 +226,11 @@ public class AdminDashboardFrame extends JPanel {
         backButton.setContentAreaFilled(false);
         backButton.setFocusPainted(false);
         backButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        
         backButton.addActionListener(e -> {
-            // Back button behavior lama (fallback)
-            SwingUtilities.getWindowAncestor(this).requestFocus();
+            dispose();
+            new MainMenuFrame();
         });
-        // Tambah callback ke container luar (mis. DisplayBoardFrame) supaya bisa kembali ke menu utama
-        if (onBack != null) {
-            backButton.addActionListener(e -> onBack.run());
-        }
 
         JLabel titleLabel = new JLabel("Ruang Sehat");
         titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
@@ -307,7 +297,6 @@ public class AdminDashboardFrame extends JPanel {
     private JPanel createStatsPanel() {
         JPanel statsPanel = new JPanel(new GridLayout(1, 4, 15, 0));
         statsPanel.setBackground(ColorPalette.BACKGROUND);
-        // Tinggikan area kartu supaya konten tidak menyentuh tepi bawah
         statsPanel.setPreferredSize(new Dimension(0, 140));
 
         statsPanel.add(createStatCard("Total Pasien", lblTotalPatients, "👥", new Color(130, 100, 255)));
@@ -324,7 +313,6 @@ public class AdminDashboardFrame extends JPanel {
         JPanel content = new JPanel();
         content.setLayout(new BoxLayout(content, BoxLayout.Y_AXIS));
         content.setOpaque(false);
-        // Tambah sedikit padding vertikal agar kartu terasa lebih tinggi dan seimbang
         content.setBorder(BorderFactory.createEmptyBorder(18, 20, 18, 20));
 
         JPanel iconPanel = new JPanel() {
@@ -337,7 +325,6 @@ public class AdminDashboardFrame extends JPanel {
                 super.paintComponent(g);
             }
         };
-        // Perbesar panel ikon dan buat benar‑benar 1:1 agar ikon berada di tengah kartu kecilnya
         Dimension iconSize = new Dimension(48, 48);
         iconPanel.setPreferredSize(iconSize);
         iconPanel.setMinimumSize(iconSize);
@@ -356,12 +343,10 @@ public class AdminDashboardFrame extends JPanel {
         titleLabel.setForeground(ColorPalette.TEXT_SECONDARY);
         titleLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // Label nilai diteruskan dari luar supaya bisa di‑update saat data berubah
         valueLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
         valueLabel.setForeground(ColorPalette.TEXT_PRIMARY);
         valueLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // Gunakan glue di atas dan bawah supaya konten berada di tengah kartu
         content.add(Box.createVerticalGlue());
         content.add(iconPanel);
         content.add(Box.createVerticalStrut(10));
