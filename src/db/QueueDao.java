@@ -20,6 +20,8 @@ import java.util.Map;
 
 public class QueueDao {
 
+    // --- INNER CLASSES (Data Models) ---
+
     public static class PatientData {
         public final String fullName;
         public final String phone;
@@ -106,6 +108,8 @@ public class QueueDao {
             this.total = total;
         }
     }
+
+    // --- METHODS ---
 
     public String registerNewQueue(PatientData patient, PoliDao.Poli poli) {
         if (poli == null || patient == null) {
@@ -483,5 +487,30 @@ public class QueueDao {
             e.printStackTrace();
             return false;
         }
+    }
+
+    // --- METHOD BARU UNTUK CHART ---
+    public Map<String, Integer> getCountPerPoli() {
+        Map<String, Integer> stats = new LinkedHashMap<>();
+        String sql = "SELECT p.poli_name, COUNT(a.antrian_id) as total " +
+                     "FROM antrian a " +
+                     "JOIN poli p ON a.poli_id = p.poli_id " +
+                     "WHERE a.queue_date = ? " +
+                     "GROUP BY p.poli_name";
+
+        try (Connection conn = DatabaseManager.getInstance().openConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            
+            ps.setDate(1, Date.valueOf(LocalDate.now()));
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    stats.put(rs.getString("poli_name"), rs.getInt("total"));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return stats;
     }
 }

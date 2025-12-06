@@ -7,7 +7,6 @@ public class SessionManager {
     private static Admin currentAdmin = null;
 
     private SessionManager() {
-        // utility class
     }
 
     public static void setAdminLoggedIn(String username) {

@@ -41,13 +41,11 @@ public class DisplayBoardFrame extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // Load data awal
         QueueDao queueDao = new QueueDao();
         nowServingData = queueDao.loadNowServing();
         waitingQueue = queueDao.loadWaitingQueue(5);
         counterSummary = queueDao.loadCounterSummary();
 
-        // Panel Utama dengan Gradient Background
         JPanel mainPanel = new JPanel(new BorderLayout()) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -69,7 +67,6 @@ public class DisplayBoardFrame extends JFrame {
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.BOTH;
 
-        // Bagian Kiri (Nomor Dipanggil)
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.weightx = 0.7;
@@ -78,7 +75,6 @@ public class DisplayBoardFrame extends JFrame {
         gbc.insets = new Insets(0, 30, 10, 10);
         contentPanel.add(createLeftSection(), gbc);
 
-        // Bagian Kanan (Daftar Tunggu)
         gbc.gridx = 1;
         gbc.gridy = 0;
         gbc.weightx = 0.3;
@@ -87,7 +83,6 @@ public class DisplayBoardFrame extends JFrame {
         gbc.insets = new Insets(0, 10, 10, 30);
         contentPanel.add(createRightSection(), gbc);
 
-        // Bagian Bawah (Ringkasan Loket)
         gbc.gridx = 0;
         gbc.gridy = 1;
         gbc.gridwidth = 2;
@@ -114,7 +109,6 @@ public class DisplayBoardFrame extends JFrame {
         header.setOpaque(false);
         header.setBorder(BorderFactory.createEmptyBorder(15, 30, 10, 30));
 
-        // Kiri: logo dan judul
         JPanel leftContainer = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
         leftContainer.setOpaque(false);
 
@@ -139,7 +133,6 @@ public class DisplayBoardFrame extends JFrame {
         leftContainer.add(logoIcon);
         leftContainer.add(textPanel);
 
-        // Kanan: jam + tombol login petugas
         JPanel rightContainer = new JPanel();
         rightContainer.setLayout(new BoxLayout(rightContainer, BoxLayout.Y_AXIS));
         rightContainer.setOpaque(false);
@@ -161,7 +154,6 @@ public class DisplayBoardFrame extends JFrame {
         timePanel.add(dateLabel);
         timePanel.add(timeLabel);
 
-        // Tombol Login Petugas
         ModernButton staffLoginButton = new ModernButton(
                 "Login Petugas",
                 Color.WHITE,
@@ -172,9 +164,8 @@ public class DisplayBoardFrame extends JFrame {
         staffLoginButton.setPreferredSize(new Dimension(150, 32));
         staffLoginButton.setMaximumSize(new Dimension(160, 32));
         
-        // AKSI: Pindah ke Frame Login / Menu
         staffLoginButton.addActionListener(e -> {
-            dispose(); // Tutup layar antrian
+            dispose(); 
             if (SessionManager.isAdminLoggedIn()) {
                 new MainMenuFrame();
             } else {

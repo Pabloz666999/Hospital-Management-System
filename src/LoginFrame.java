@@ -70,7 +70,7 @@ public class LoginFrame extends JFrame {
         cancelButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
         cancelButton.addActionListener(e -> {
             dispose();
-            new DisplayBoardFrame(); // Kembali ke layar antrian
+            new DisplayBoardFrame();
         });
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 0));
@@ -79,7 +79,6 @@ public class LoginFrame extends JFrame {
         buttonPanel.add(loginButton);
         buttonPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
 
-        // Menyusun Komponen
         loginCard.add(Box.createVerticalStrut(10));
         loginCard.add(titleLabel);
         loginCard.add(Box.createVerticalStrut(5));
@@ -130,7 +129,7 @@ public class LoginFrame extends JFrame {
         if (admin != null) {
             SessionManager.setAdminLoggedIn(admin);
             dispose();
-            new MainMenuFrame(); // Masuk ke Menu Utama
+            new MainMenuFrame();
         } else {
             JOptionPane.showMessageDialog(this, "Username atau password salah!", "Login Gagal", JOptionPane.ERROR_MESSAGE);
         }

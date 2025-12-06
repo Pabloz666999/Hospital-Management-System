@@ -108,7 +108,6 @@ public class PatientRegistration extends JFrame {
         }
     }
 
-    // --- STEP 1: PILIH POLI ---
     private JPanel createServiceSelectionPanel() {
         JPanel container = new JPanel(new BorderLayout());
         container.setBackground(ColorPalette.BACKGROUND);
@@ -228,76 +227,62 @@ public class PatientRegistration extends JFrame {
             }
         });
 
-        // Panel pembungkus agar kartu memiliki margin di grid
         JPanel wrapper = new JPanel(new BorderLayout());
         wrapper.setOpaque(false);
         wrapper.add(card);
         return wrapper;
     }
 
-    // --- STEP 2: FORM DATA PASIEN (DIPERBAIKI) ---
     private JPanel createPatientFormPanel() {
-        // Container Utama: Menggunakan GridBagLayout untuk memusatkan kartu di tengah layar
         JPanel container = new JPanel(new GridBagLayout());
         container.setBackground(ColorPalette.BACKGROUND);
 
-        // KARTU FORMULIR
-        JPanel formCard = new JPanel(new GridBagLayout()); // Gunakan GridBagLayout di dalam kartu juga
+        JPanel formCard = new JPanel(new GridBagLayout());
         formCard.setBackground(Color.WHITE);
         
-        // Ukuran Preferensi Kartu: Lebar 550px agar pas (tidak terlalu lebar/sempit)
         formCard.setPreferredSize(new Dimension(550, 720)); 
         
         formCard.setBorder(BorderFactory.createCompoundBorder(
                 new RoundedBorder(new Color(230, 230, 235), 1, 25),
-                // Padding di dalam kartu diperbesar (Top, Left, Bottom, Right)
                 BorderFactory.createEmptyBorder(30, 40, 40, 40)));
 
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(0, 0, 15, 0); // Jarak antar elemen vertikal
-        gbc.fill = GridBagConstraints.HORIZONTAL; // Komponen melebar penuhi kartu
+        gbc.insets = new Insets(0, 0, 15, 0);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
         gbc.gridx = 0;
         gbc.gridy = 0;
 
-        // 1. JUDUL
         JLabel title = new JLabel("Data Pasien");
         title.setFont(new Font("Segoe UI", Font.BOLD, 22));
         title.setForeground(ColorPalette.PRIMARY);
-        title.setHorizontalAlignment(SwingConstants.CENTER); // Rata tengah teks
+        title.setHorizontalAlignment(SwingConstants.CENTER);
         
-        gbc.insets = new Insets(0, 0, 25, 0); // Jarak ekstra di bawah judul
+        gbc.insets = new Insets(0, 0, 25, 0);
         formCard.add(title, gbc);
 
-        // 2. INPUT FIELDS
         gbc.gridy++;
-        gbc.insets = new Insets(0, 0, 12, 0); // Reset jarak normal
+        gbc.insets = new Insets(0, 0, 12, 0);
 
-        // Inisialisasi Komponen
         nameField = new ModernTextField("Masukkan nama lengkap");
         phoneField = new ModernTextField("Masukkan nomor telepon");
         nikField = new ModernTextField("Masukkan NIK");
         
-        // Menambahkan Field (Label + Input)
         addFormRow(formCard, "Nama Lengkap", nameField, gbc);
         addFormRow(formCard, "Nomor Telepon", phoneField, gbc);
         addFormRow(formCard, "Nomor Induk Kependudukan (NIK)", nikField, gbc);
 
-        // 3. BARIS GANDA (UMUR & GENDER)
         gbc.gridy++;
-        JPanel rowDual = new JPanel(new GridLayout(1, 2, 20, 0)); // Grid 2 kolom, gap 20px
+        JPanel rowDual = new JPanel(new GridLayout(1, 2, 20, 0));
         rowDual.setOpaque(false);
         
-        // Umur
         ageSpinner = new JSpinner(new SpinnerNumberModel(25, 0, 120, 1));
         styleSpinner(ageSpinner);
         rowDual.add(createCompactField("Umur", ageSpinner));
         
-        // Gender
         genderCombo = new JComboBox<>(new String[]{"Laki-laki", "Perempuan"});
         genderCombo.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         genderCombo.setBackground(Color.WHITE);
-        // Styling combobox agar mirip textfield
         genderCombo.setBorder(BorderFactory.createCompoundBorder(
             new RoundedBorder(ColorPalette.TEXT_SECONDARY, 1, 10),
             BorderFactory.createEmptyBorder(5, 5, 5, 5)
@@ -306,7 +291,6 @@ public class PatientRegistration extends JFrame {
         
         formCard.add(rowDual, gbc);
 
-        // 4. TANGGAL LAHIR
         gbc.gridy++;
         dobSpinner = new JSpinner(new SpinnerDateModel(new Date(), null, null, Calendar.DAY_OF_MONTH));
         JSpinner.DateEditor dateEditor = new JSpinner.DateEditor(dobSpinner, "dd/MM/yyyy");
@@ -314,7 +298,6 @@ public class PatientRegistration extends JFrame {
         styleSpinner(dobSpinner);
         addFormRow(formCard, "Tanggal Lahir", dobSpinner, gbc);
 
-        // 5. ALAMAT
         gbc.gridy++;
         addressArea = new JTextArea(3, 20);
         addressArea.setLineWrap(true);
@@ -326,9 +309,8 @@ public class PatientRegistration extends JFrame {
                 BorderFactory.createEmptyBorder(5, 8, 5, 8)));
         addFormRow(formCard, "Alamat Lengkap", addressScroll, gbc);
 
-        // 6. TOMBOL AKSI
         gbc.gridy++;
-        gbc.insets = new Insets(20, 0, 0, 0); // Jarak ekstra di atas tombol
+        gbc.insets = new Insets(20, 0, 0, 0);
         
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
         buttonPanel.setOpaque(false);
@@ -347,8 +329,6 @@ public class PatientRegistration extends JFrame {
         
         formCard.add(buttonPanel, gbc);
 
-        // Tambahkan kartu ke ScrollPane utama (untuk layar kecil)
-        // Gunakan GridBagLayout pada Container utama agar kartu berada di tengah
         container.add(formCard);
         
         JScrollPane mainScroll = new JScrollPane(container);
@@ -362,11 +342,9 @@ public class PatientRegistration extends JFrame {
         return wrapper;
     }
 
-    // Helper untuk menambahkan baris form (Label + Input) ke GridBagLayout
     private void addFormRow(JPanel panel, String labelText, JComponent field, GridBagConstraints gbc) {
         gbc.gridy++;
         
-        // Container baris (Label di atas, Input di bawah)
         JPanel row = new JPanel(new BorderLayout(0, 5));
         row.setOpaque(false);
         
@@ -380,7 +358,6 @@ public class PatientRegistration extends JFrame {
         panel.add(row, gbc);
     }
 
-    // Helper untuk field kecil (Umur/Gender)
     private JPanel createCompactField(String labelText, JComponent field) {
         JPanel panel = new JPanel(new BorderLayout(0, 5));
         panel.setOpaque(false);
@@ -395,7 +372,6 @@ public class PatientRegistration extends JFrame {
     }
 
     private void styleSpinner(JSpinner spinner) {
-        // Styling custom untuk JSpinner agar mirip ModernTextField
         spinner.setBorder(BorderFactory.createCompoundBorder(
                 new RoundedBorder(ColorPalette.TEXT_SECONDARY, 1, 10),
                 BorderFactory.createEmptyBorder(5, 5, 5, 5)));
@@ -404,21 +380,19 @@ public class PatientRegistration extends JFrame {
             JFormattedTextField tf = ((JSpinner.DefaultEditor) editor).getTextField();
             tf.setHorizontalAlignment(SwingConstants.LEFT);
             tf.setFont(new Font("Segoe UI", Font.PLAIN, 14));
-            tf.setBorder(null); // Hapus border bawaan textfield dalam spinner
+            tf.setBorder(null);
             tf.setBackground(Color.WHITE);
         }
     }
 
-    // --- STEP 3: KONFIRMASI ---
-    // --- STEP 3: KONFIRMASI (UPDATED) ---
     private JPanel createConfirmationPanel() {
-        JPanel container = new JPanel(new GridBagLayout()); // Center card
+        JPanel container = new JPanel(new GridBagLayout());
         container.setBackground(ColorPalette.BACKGROUND);
 
         JPanel card = new JPanel();
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
         card.setBackground(Color.WHITE);
-        card.setPreferredSize(new Dimension(500, 450)); // Fit size
+        card.setPreferredSize(new Dimension(500, 450));
         card.setBorder(BorderFactory.createCompoundBorder(
                 new RoundedBorder(new Color(230, 230, 235), 1, 25),
                 BorderFactory.createEmptyBorder(40, 40, 40, 40)));
@@ -444,7 +418,6 @@ public class PatientRegistration extends JFrame {
         buttonPanel.setOpaque(false);
 
         ModernButton newRegBtn = new ModernButton("Pendaftaran Baru", ColorPalette.PRIMARY, ColorPalette.PRIMARY_DARK);
-        // PERBAIKAN: Lebar diperbesar dari 160 menjadi 200 agar teks tidak terpotong (...)
         newRegBtn.setPreferredSize(new Dimension(200, 40)); 
         newRegBtn.addActionListener(e -> showStep1());
 

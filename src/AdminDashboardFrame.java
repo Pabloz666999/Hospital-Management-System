@@ -371,9 +371,9 @@ public class AdminDashboardFrame extends JFrame {
         header.setOpaque(false);
         header.setBorder(BorderFactory.createEmptyBorder(15, 20, 5, 20));
 
-        JLabel title = new JLabel("Tren Antrian");
+        JLabel title = new JLabel("Statistik Poli");
         title.setFont(new Font("Segoe UI", Font.BOLD, 15));
-        JLabel subtitle = new JLabel("Jumlah antrian baru per menit (60 menit terakhir)");
+        JLabel subtitle = new JLabel("Jumlah pasien terdaftar berdasarkan Poli (Hari ini)");
         subtitle.setFont(new Font("Segoe UI", Font.PLAIN, 11));
         subtitle.setForeground(ColorPalette.TEXT_SECONDARY);
 
@@ -398,30 +398,55 @@ public class AdminDashboardFrame extends JFrame {
         chartPlaceholder.setLayout(new BorderLayout());
 
         QueueDao queueDao = new QueueDao();
-        java.util.List<QueueDao.MinuteTrendPoint> points =
-                queueDao.loadQueueTrendLastMinutes(60);
+        java.util.Map<String, Integer> poliStats = queueDao.getCountPerPoli();
 
-        if (points.isEmpty()) {
-            JLabel empty = new JLabel("Belum ada data antrian pada 60 menit terakhir.");
+        if (poliStats.isEmpty()) {
+            JLabel empty = new JLabel("Belum ada data pendaftaran hari ini.");
             empty.setForeground(ColorPalette.TEXT_SECONDARY);
             empty.setFont(new Font("Segoe UI", Font.PLAIN, 12));
             empty.setHorizontalAlignment(SwingConstants.CENTER);
             chartPlaceholder.add(empty, BorderLayout.CENTER);
         } else {
             DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-            for (QueueDao.MinuteTrendPoint p : points) {
-                dataset.addValue(p.total, "Antrian", p.minuteLabel);
+            for (java.util.Map.Entry<String, Integer> entry : poliStats.entrySet()) {
+                dataset.addValue(entry.getValue(), "Pasien", entry.getKey());
             }
 
-            JFreeChart chart = ChartFactory.createLineChart(
+            JFreeChart chart = ChartFactory.createBarChart(
                     null,
-                    "Waktu (HH:mm)",
-                    "Jumlah Antrian",
-                    dataset
+                    "Poli",
+                    "Jumlah Pasien",
+                    dataset,
+                    org.jfree.chart.plot.PlotOrientation.VERTICAL,
+                    false,
+                    true,
+                    false
             );
+
+            org.jfree.chart.plot.CategoryPlot plot = chart.getCategoryPlot();
+            plot.setBackgroundPaint(Color.WHITE);
+            plot.setOutlineVisible(false);
+            plot.setRangeGridlinePaint(new Color(230, 230, 230));
+            plot.setDomainGridlinesVisible(false);
+
+            org.jfree.chart.axis.NumberAxis rangeAxis = (org.jfree.chart.axis.NumberAxis) plot.getRangeAxis();
+
+            rangeAxis.setTickUnit(new org.jfree.chart.axis.NumberTickUnit(1));
+            rangeAxis.setNumberFormatOverride(new java.text.DecimalFormat("0"));
+            rangeAxis.setAutoRangeMinimumSize(5); 
+            rangeAxis.setLowerBound(0);
+            rangeAxis.setUpperMargin(0.15);
+
+            org.jfree.chart.renderer.category.BarRenderer renderer = 
+                (org.jfree.chart.renderer.category.BarRenderer) plot.getRenderer();
+            renderer.setSeriesPaint(0, new Color(130, 100, 255));
+            renderer.setBarPainter(new org.jfree.chart.renderer.category.StandardBarPainter());
+            renderer.setShadowVisible(false);
+            renderer.setMaximumBarWidth(0.15); 
 
             ChartPanel chartPanel = new ChartPanel(chart);
             chartPanel.setOpaque(false);
+            chartPanel.setBorder(null);
             chartPanel.setBackground(new Color(0, 0, 0, 0));
 
             chartPlaceholder.add(chartPanel, BorderLayout.CENTER);
@@ -431,26 +456,6 @@ public class AdminDashboardFrame extends JFrame {
         card.add(chartPlaceholder, BorderLayout.CENTER);
 
         return card;
-    }
-
-    private JPanel createBarRow(String label, int value, int max, Color barColor) {
-        JPanel row = new JPanel(new BorderLayout(10, 0));
-        row.setOpaque(false);
-
-        JLabel lbl = new JLabel(label);
-        lbl.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-
-        JProgressBar bar = new JProgressBar(0, max);
-        bar.setValue(value);
-        bar.setStringPainted(true);
-        bar.setString(value + " pasien");
-        bar.setForeground(barColor);
-        bar.setBackground(new Color(240, 240, 245));
-
-        row.add(lbl, BorderLayout.WEST);
-        row.add(bar, BorderLayout.CENTER);
-
-        return row;
     }
 
     private JPanel createQueueManagementCard() {
@@ -474,12 +479,14 @@ public class AdminDashboardFrame extends JFrame {
 
         JPanel controlPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         controlPanel.setOpaque(false);
+        controlPanel.setBorder(BorderFactory.createEmptyBorder(5, 10, 15, 10));
 
         JLabel loketLabel = new JLabel("Loket:");
         loketLabel.setFont(new Font("Segoe UI", Font.PLAIN, 12));
 
         LoketDao loketDao = new LoketDao();
         java.util.List<LoketDao.Loket> lokets = loketDao.findAllActive();
+        
         loketCombo = new JComboBox<>();
         for (LoketDao.Loket l : lokets) {
             loketCombo.addItem(new LoketItem(l.getId(), l.getName()));
@@ -597,9 +604,14 @@ public class AdminDashboardFrame extends JFrame {
         tableScroll.setBorder(BorderFactory.createEmptyBorder(0, 20, 20, 20));
         tableScroll.getViewport().setBackground(Color.WHITE);
 
-        card.add(header, BorderLayout.NORTH);
-        card.add(controlPanel, BorderLayout.CENTER);
-        card.add(tableScroll, BorderLayout.SOUTH);
+        JPanel topWrapper = new JPanel(new BorderLayout());
+        topWrapper.setOpaque(false);
+        topWrapper.add(header, BorderLayout.NORTH);
+        topWrapper.add(controlPanel, BorderLayout.CENTER);
+
+        card.add(topWrapper, BorderLayout.NORTH);
+
+        card.add(tableScroll, BorderLayout.CENTER);
 
         return card;
     }
@@ -655,7 +667,6 @@ public class AdminDashboardFrame extends JFrame {
     }
 
     private void reloadDashboardData() {
-        // Perbarui ringkasan statistik di kartu atas
         updateStatsValues();
 
         analyticsCard = createAnalyticsCard();
