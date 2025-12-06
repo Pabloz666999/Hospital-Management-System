@@ -501,9 +501,6 @@ public class AdminDashboardFrame extends JFrame {
         JButton btnCallNext = new ModernButton("Panggil Berikutnya",
                 ColorPalette.PRIMARY,
                 ColorPalette.PRIMARY_DARK);
-        JButton btnRecall = new ModernButton("Panggil Ulang",
-                ColorPalette.PRIMARY,
-                ColorPalette.PRIMARY_DARK);
         JButton btnFinish = new ModernButton("Selesai",
                 ColorPalette.SUCCESS,
                 ColorPalette.SUCCESS.darker());
@@ -512,12 +509,10 @@ public class AdminDashboardFrame extends JFrame {
                 ColorPalette.DANGER.darker());
 
         btnCallNext.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        btnRecall.setFont(new Font("Segoe UI", Font.BOLD, 12));
         btnFinish.setFont(new Font("Segoe UI", Font.BOLD, 12));
         btnCancel.setFont(new Font("Segoe UI", Font.BOLD, 12));
 
         btnCallNext.addActionListener(e -> handleCallNext());
-        btnRecall.addActionListener(e -> handleRecall());
         btnFinish.addActionListener(e -> handleFinish());
         btnCancel.addActionListener(e -> handleCancel());
 
@@ -525,7 +520,6 @@ public class AdminDashboardFrame extends JFrame {
         controlPanel.add(loketCombo);
         controlPanel.add(Box.createHorizontalStrut(10));
         controlPanel.add(btnCallNext);
-        controlPanel.add(btnRecall);
         controlPanel.add(btnFinish);
         controlPanel.add(btnCancel);
 
@@ -727,14 +721,6 @@ public class AdminDashboardFrame extends JFrame {
         if (nomor == null) return;
         QueueDao dao = new QueueDao();
         dao.markCancelledByNomor(nomor);
-        reloadDashboardData();
-    }
-
-    private void handleRecall() {
-        String nomor = getSelectedNomorAntrian();
-        if (nomor == null) return;
-        QueueDao dao = new QueueDao();
-        dao.recallByNomor(nomor);
         reloadDashboardData();
     }
 
